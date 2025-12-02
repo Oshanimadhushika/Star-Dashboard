@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }) {
             >
                 <Header collapsed={collapsed} />
                 <Content
-                    className="p-6 bg-white dark:bg-black text-black dark:text-white"
+                    className="p-6 bg-white  text-black "
                     style={{
                         margin: 0,
                         minHeight: 280,
