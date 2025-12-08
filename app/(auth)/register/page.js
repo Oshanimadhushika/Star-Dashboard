@@ -57,7 +57,7 @@ export default function RegisterPage() {
                 >
                     <Input
                         placeholder="john@example.com"
-                        className="h-10 bg-white/20 border-white/30 text-white placeholder-white/50 hover:bg-white/30 focus:bg-white/30 focus:border-white/50"
+                        className="h-10 !bg-white/20 !border-white/30 text-white placeholder-white/50 hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
                         style={{ color: 'white' }}
                     />
                 </Form.Item>
@@ -69,7 +69,7 @@ export default function RegisterPage() {
                 >
                     <Input.Password
                         placeholder="*******"
-                        className="h-10 bg-white/20 border-white/30 text-white placeholder-white/50 hover:bg-white/30 focus:bg-white/30 focus:border-white/50"
+                        className="h-10 !bg-white/20 !border-white/30 text-white placeholder-white/50 hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
                         style={{ color: 'white' }}
                     />
                 </Form.Item>
@@ -79,7 +79,7 @@ export default function RegisterPage() {
                         type="primary"
                         htmlType="submit"
                         block
-                        className="h-10 bg-[#ff00cc] border-none hover:bg-[#d900ad] font-semibold text-white shadow-lg"
+                        className="h-10 w-full !bg-[#FF00DD] !border-none hover:bg-[#d900ad] font-semibold !text-white shadow-lg"
                     >
                         Sign Up
                     </Button>
