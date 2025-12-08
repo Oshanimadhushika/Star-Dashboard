@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { AudioOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -105,6 +106,15 @@ export default function LoginPage() {
                         </Button>
                     )}
                 </Form.Item>
+
+
+
+                <div className="text-center text-white mt-4">
+                    Don&apos;t have an account?
+                    <Link href="/register" className="ml-2 !text-blue-300 !hover:text-white text-sm">
+                        Sign Up
+                    </Link>
+                </div>
             </Form>
 
 

@@ -42,7 +42,7 @@ export default function RegisterPage() {
                 >
                     <Input
                         placeholder="John Doe"
-                        className="h-10 bg-white/20 border-white/30 text-white placeholder-white/50 hover:bg-white/30 focus:bg-white/30 focus:border-white/50"
+                        className="h-10 !bg-white/20 !border-white/30 text-white placeholder-white/50 hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
                         style={{ color: 'white' }}
                     />
                 </Form.Item>
@@ -85,25 +85,16 @@ export default function RegisterPage() {
                     </Button>
                 </Form.Item>
 
-                <div className="text-center mt-4">
-                    <Link href="/login" className="text-white/80 hover:text-white text-sm">
-                        Already have an account? Sign In
+
+                <div className="text-center text-white mt-4">
+                    Already have an account?
+                    <Link href="/login" className="ml-2 !text-blue-300 !hover:text-white text-sm">
+                        Login
                     </Link>
                 </div>
             </Form>
 
-            <style jsx global>{`
-        .auth-form .ant-input-password .ant-input {
-          background: transparent !important;
-          color: white !important;
-        }
-        .auth-form .ant-input-password-icon {
-          color: rgba(255, 255, 255, 0.7) !important;
-        }
-        .auth-form .ant-input::placeholder {
-          color: rgba(255, 255, 255, 0.5) !important;
-        }
-      `}</style>
+
         </div>
     );
 }
