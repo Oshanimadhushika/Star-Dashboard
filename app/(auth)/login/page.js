@@ -7,12 +7,18 @@ import { useRouter } from 'next/navigation';
 import { loginUser } from '@/app/services/authService';
 // import { setLocalStorageData } from '@/app/helpers/storageHelper';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
+import { getCookie } from '@/app/helpers/storageHelper';
 
 export default function LoginPage() {
     const router = useRouter();
     const [form] = Form.useForm();
 
     const { trigger: triggerLogin, loading } = useLazyFetch(loginUser);
+
+    const token = getCookie('auth-token');
+
+    console.log(token);
+
 
     const onFinish = async (values) => {
         const response = await triggerLogin(values, {
@@ -21,7 +27,6 @@ export default function LoginPage() {
         });
 
         if (response?.data.success) {
-            // setLocalStorageData('token', response.data.token);
             router.push('/');
         }
     };

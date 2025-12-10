@@ -1,5 +1,6 @@
 import { decrypt } from "./encryptionHelper";
 import { encrypt } from "./encryptionHelper";
+import Cookies from "js-cookie";
 
 export function setLocalStorageData(key, data) {
   if (typeof window !== "undefined") {
@@ -23,3 +24,26 @@ export function removeLocalStorageData(key) {
     localStorage.removeItem(key);
   }
 }
+
+export const setCookie = (name, dataObject, time, path = "/") => {
+  Cookies.set(name, JSON.stringify(dataObject), {
+    expires: time, // e.g. 1/24 for 1 hour
+    path,
+  });
+};
+
+export const getCookie = (name) => {
+  const cookie = Cookies.get(name);
+  return cookie ? JSON.parse(cookie) : null;
+};
+
+export const removeCookie = (name) => {
+  Cookies.remove(name);
+};
+
+export const removeAllCookies = () => {
+  const allCookies = Cookies.get();
+  Object.keys(allCookies).forEach((cookieName) => {
+    Cookies.remove(cookieName);
+  });
+};

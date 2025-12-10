@@ -18,7 +18,7 @@ export function NotificationContextProvider({ children }) {
         let textColor = "";
 
         if (type === "success") {
-            backgroundColor = "#B7009F38";
+            backgroundColor = "#6A0DAD";
             textColor = "#FFFFFF";
         } else if (type === "warning") {
             backgroundColor = "#ed6e68";

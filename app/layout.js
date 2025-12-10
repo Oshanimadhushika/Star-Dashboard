@@ -1,6 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AntdRegistry from "@/lib/AntdRegistry";
 import { NotificationContextProvider } from "./context/NotificationContext";
 
 const geistSans = Geist({
@@ -24,11 +23,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* <AntdRegistry> */}
         <NotificationContextProvider>
           {children}
         </NotificationContextProvider>
-        {/* </AntdRegistry> */}
       </body>
     </html>
   );
