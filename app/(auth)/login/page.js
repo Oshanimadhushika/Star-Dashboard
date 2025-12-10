@@ -1,33 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
-import { AudioOutlined } from '@ant-design/icons';
+import React from 'react';
+import { Form, Input, Button } from 'antd';
+import { AudioOutlined, MailOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { loginUser } from '@/app/services/authService';
+// import { setLocalStorageData } from '@/app/helpers/storageHelper';
+import useLazyFetch from '@/app/hooks/useLazyFetch';
 
 export default function LoginPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
-    const clientReady = true;
+    const { trigger: triggerLogin, loading } = useLazyFetch(loginUser);
 
     const onFinish = async (values) => {
-        setLoading(true);
-        setTimeout(() => {
-            if (values.phoneNumber === '0000000000') {
-                message.error('Invalid phone number or password.');
-                setLoading(false);
-            } else {
-                message.success('Login successful!');
-                router.push('/');
-            }
-        }, 1000);
-    };
+        const response = await triggerLogin(values, {
+            successMsg: true,
+            errorMsg: true
+        });
 
-    const onFinishFailed = (errorInfo) => {
-        console.log('Failed:', errorInfo);
+        if (response?.data.success) {
+            // setLocalStorageData('token', response.data.token);
+            router.push('/');
+        }
     };
 
     return (
@@ -48,30 +44,23 @@ export default function LoginPage() {
                 layout="vertical"
                 initialValues={{ remember: true }}
                 onFinish={onFinish}
-                onFinishFailed={onFinishFailed}
                 autoComplete="off"
                 className="auth-form"
             >
                 <Form.Item
-                    label={<span className="text-white font-medium">Phone Number</span>}
-                    name="phoneNumber"
+                    label={<span className="text-white font-medium">Email</span>}
+                    name="userName"
                     validateTrigger={['onChange', 'onBlur']}
                     rules={[
-                        { required: true, message: 'Phone number is required.' },
-                        { pattern: /^[0-9]+$/, message: 'Enter a valid phone number.' },
-                        { len: 10, message: 'Enter a valid phone number.' }
+                        { required: true, message: 'Email is required.' },
+                        { type: 'email', message: 'Enter a valid email address.' }
                     ]}
                 >
                     <Input
-                        maxLength={10}
-                        placeholder="0000000000"
+                        prefix={<MailOutlined className="text-white/50" />}
+                        placeholder="admin@example.com"
                         className="h-10 !bg-white/20 !border-white/30 text-white placeholder-white/50 hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
                         style={{ color: 'white' }}
-                        onKeyPress={(event) => {
-                            if (!/[0-9]/.test(event.key)) {
-                                event.preventDefault();
-                            }
-                        }}
                     />
                 </Form.Item>
 
@@ -97,27 +86,16 @@ export default function LoginPage() {
                             disabled={
                                 !form.isFieldsTouched(true) ||
                                 !!form.getFieldsError().filter(({ errors }) => errors.length).length ||
-                                !form.getFieldValue('phoneNumber') ||
+                                !form.getFieldValue('userName') ||
                                 !form.getFieldValue('password')
                             }
-                            className="h-10 w-full !bg-[#FF00DD] !border-none hover:bg-[#d900ad] font-semibold !text-white shadow-lg"
+                            className="h-10 w-full !bg-[#FF00DD] !border-none hover:bg-[#d900ad] font-semibold !text-white shadow-lg disabled:!bg-white/20 disabled:!text-white/50 disabled:!cursor-not-allowed"
                         >
                             Sign In
                         </Button>
                     )}
                 </Form.Item>
-
-
-
-                <div className="text-center text-white mt-4">
-                    Don&apos;t have an account?
-                    <Link href="/register" className="ml-2 !text-blue-300 !hover:text-white text-sm">
-                        Sign Up
-                    </Link>
-                </div>
             </Form>
-
-
         </div>
     );
 }
