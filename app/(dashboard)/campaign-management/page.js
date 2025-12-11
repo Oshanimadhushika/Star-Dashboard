@@ -82,6 +82,7 @@ export default function CampaignManagementPage() {
     };
 
     const validateCurrentStep = () => {
+        if (!isModalOpen) return;
         const fieldsToValidate = stepFields[currentStep];
 
         const errors = form.getFieldsError(fieldsToValidate);
@@ -96,9 +97,11 @@ export default function CampaignManagementPage() {
     }, [currentStep, form]);
 
     useEffect(() => {
-        const values = form.getFieldsValue();
-        setFormData(prev => ({ ...prev, ...values }));
-    }, [form]);
+        if (isModalOpen) {
+            form.setFieldsValue(formData);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentStep, form, isModalOpen]);
 
     // const onFormValuesChange = () => {
     //     validateCurrentStep();
@@ -606,7 +609,8 @@ export default function CampaignManagementPage() {
                                 onClick={async () => {
                                     try {
                                         // Get all form values
-                                        const formValues = form.getFieldsValue();
+                                        // const formValues = form.getFieldsValue();
+                                        const formValues = formData;
 
                                         console.log("formValues", formValues);
 
