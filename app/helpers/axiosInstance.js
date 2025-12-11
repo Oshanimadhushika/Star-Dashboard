@@ -1,9 +1,7 @@
-import { getLocalStoragedata } from "@/app/helpers/storageHelper";
+import { getCookie } from "@/app/helpers/storageHelper";
 import axios from "axios";
 
-// -------------------------
-// JSON Axios
-// -------------------------
+
 export const authorizedAxiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
     withCredentials: true,
@@ -12,9 +10,7 @@ export const authorizedAxiosInstance = axios.create({
     },
 });
 
-// -------------------------
-// File Upload Axios (form-data)
-// -------------------------
+
 export const authorizedFileUploadAxiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
     withCredentials: true,
@@ -23,24 +19,22 @@ export const authorizedFileUploadAxiosInstance = axios.create({
     },
 });
 
-// -------------------------
-// Interceptors for both
-// -------------------------
 
-authorizedAxiosInstance.interceptors.request.use((config) => {
-    const token = getLocalStoragedata("token");
 
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+// authorizedAxiosInstance.interceptors.request.use((config) => {
+//     const token = getCookie("auth-token");
 
-authorizedFileUploadAxiosInstance.interceptors.request.use((config) => {
-    const token = getLocalStoragedata("token");
+//     if (token) {
+//         config.headers["auth-token"] = token;
+//     }
+//     return config;
+// });
 
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+// authorizedFileUploadAxiosInstance.interceptors.request.use((config) => {
+//     const token = getCookie("auth-token");
+
+//     if (token) {
+//         config.headers["auth-token"] = token;
+//     }
+//     return config;
+// });

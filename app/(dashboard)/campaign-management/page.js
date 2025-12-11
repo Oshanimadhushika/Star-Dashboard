@@ -1,13 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Input, Button, Modal, Tabs, Upload, Select, DatePicker, Switch, Steps, InputNumber, message, ConfigProvider } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Input, Button, Modal, Tabs, Upload, Select, DatePicker, Switch, Steps, InputNumber, message, ConfigProvider, Form } from 'antd';
 import { Search, Trophy, Calendar, Users, Video, Award, Eye, Edit, Plus, Info, UploadCloud, X, Check, CheckCircle } from 'lucide-react';
+import { createCampaign, uploadCampaignImage } from '@/app/services/campaignService';
+import useLazyFetch from '@/app/hooks/useLazyFetch';
+import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 const { Option } = Select;
 
 export default function CampaignManagementPage() {
+    const [form] = Form.useForm();
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState({
@@ -15,20 +20,30 @@ export default function CampaignManagementPage() {
         category: '',
         description: '',
         price: '',
-        image: null,
-        campaignDates: [],
-        votingDates: [],
-        reviewDates: [],
+        campaignImageUrl: null,
+        enrollStartTime: null,
+        completeTime: null,
+        votingStartTime: null,
+        votingEndTime: null,
+        reviewStartTime: null,
+        reviewEndTime: null,
         maxParticipants: '',
-        ageRestriction: '',
+        maxAgeLimit: '',
+        minAgeLimit: 18,
+        pricePool: '',
         featured: false,
         requiresApproval: false,
         publicVoting: false,
         rules: [],
     });
+    const [imageUrl, setImageUrl] = useState('');
+    const [isStepValid, setIsStepValid] = useState(false);
+
+
+    // API Hooks
+    const { trigger: triggerCreate, loading: createLoading } = useLazyFetch(createCampaign);
     const [newRule, setNewRule] = useState('');
 
-    // Dummy Data matching the design
     const campaigns = [
         { id: 1, title: "Summer Idol 2025", status: "In Review", statusColor: "text-green-600 bg-green-100", duration: "2025-06-01 - 2025-08-31", participants: 342, videos: 1200, votes: "45,890", iconColor: "bg-pink-100 text-pink-500", hasWinner: false },
         { id: 2, title: "Voice-Teen", status: "Completed", statusColor: "text-purple-600 bg-purple-100", duration: "2025-09-01 - 2025-10-31", participants: 467, videos: 188, votes: "76,987", iconColor: "bg-pink-100 text-pink-500", hasWinner: true, winner: { name: "Sally Wilz", song: "Shape of u (Cover)", votes: "15.5k Votes", image: "https://i.pravatar.cc/150?u=a042581f4e29026024d" } },
@@ -38,56 +53,205 @@ export default function CampaignManagementPage() {
 
     const showModal = () => setIsModalOpen(true);
     const handleCancel = () => { setIsModalOpen(false); setCurrentStep(0); };
+    const [activeTab, setActiveTab] = useState('1');
 
-    const handleNext = () => setCurrentStep(prev => prev + 1);
+    const getFilteredCampaigns = () => {
+        switch (activeTab) {
+            case '2': // Active
+                return campaigns.filter(c => c.status === "Voting Started");
+            case '3': // Upcoming
+                return campaigns.filter(c => c.status === "In Review");
+            case '4': // Past
+                return campaigns.filter(c => c.status === "Completed");
+            default: // All
+                return campaigns;
+        }
+    };
+
+    const filteredCampaigns = getFilteredCampaigns();
+
+
+    const stepFields = {
+        0: ["title", "category", "description", "pricePool"],
+        1: [
+            "enrollStartTime", "completeTime", "votingStartTime", "votingEndTime",
+            "reviewStartTime", "reviewEndTime", "maxParticipants", "maxAgeLimit"
+        ],
+        2: [],
+        3: []
+    };
+
+    const validateCurrentStep = () => {
+        const fieldsToValidate = stepFields[currentStep];
+
+        const errors = form.getFieldsError(fieldsToValidate);
+
+        const hasError = errors.some((field) => field.errors.length > 0);
+
+        setIsStepValid(!hasError);
+    };
+
+    useEffect(() => {
+        validateCurrentStep();
+    }, [currentStep, form]);
+
+    useEffect(() => {
+        const values = form.getFieldsValue();
+        setFormData(prev => ({ ...prev, ...values }));
+    }, [form]);
+
+    // const onFormValuesChange = () => {
+    //     validateCurrentStep();
+    // };
+
+    const onFormValuesChange = (changedValues, allValues) => {
+        setFormData(prev => ({ ...prev, ...allValues }));
+        validateCurrentStep();
+    };
+
+
+    const handleNext = async () => {
+        try {
+            await form.validateFields(stepFields[currentStep]);
+            setCurrentStep((prev) => prev + 1);
+        } catch {
+
+        }
+    };
+
+
     const handleBack = () => setCurrentStep(prev => prev - 1);
 
     const handleAddRule = () => {
         if (newRule.trim()) {
-            setFormData({ ...formData, rules: [...formData.rules, newRule] });
+            const currentRules = form.getFieldValue('rules') || [];
+            const updatedRules = [...currentRules, newRule];
+            form.setFieldsValue({ rules: updatedRules });
+            setFormData({ ...formData, rules: updatedRules });
             setNewRule('');
         }
     };
 
     const handleRemoveRule = (index) => {
-        const newRules = [...formData.rules];
-        newRules.splice(index, 1);
-        setFormData({ ...formData, rules: newRules });
+        const currentRules = form.getFieldValue('rules') || [];
+        const updatedRules = [...currentRules];
+        updatedRules.splice(index, 1);
+        form.setFieldsValue({ rules: updatedRules });
+        setFormData({ ...formData, rules: updatedRules });
     };
 
-    // Modal Content Steps
+
+
     const steps = [
         {
             title: 'Basic Information',
             content: (
                 <div className="flex flex-col gap-4">
-                    <div>
-                        <label className="block text-white mb-1">Campaign Title *</label>
-                        <Input placeholder="Enter Campaign Title" className="!bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500" />
-                    </div>
-                    <div>
-                        <label className="block text-white mb-1">Category *</label>
-                        <Select placeholder="Select Category" className="w-full custom-select !bg-[#2e2e48]" dropdownStyle={{ backgroundColor: '#2e2e48', color: 'white' }}>
+                    <Form.Item
+                        name="title"
+                        label={<span className="text-white">Campaign Title *</span>}
+                        rules={[{ required: true, message: 'Please enter campaign title' }]}
+                    >
+                        <Input
+                            placeholder="Enter Campaign Title"
+                            className="!bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500"
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        name="category"
+                        label={<span className="text-white">Category *</span>}
+                        rules={[{ required: true, message: 'Please select a category' }]}
+                    >
+                        <Select
+                            placeholder="Select Category"
+                            className="w-full custom-select !bg-[#2e2e48]"
+                            styles={{ popup: { backgroundColor: '#2e2e48', color: 'white' } }}
+                        >
                             <Option value="music">Music</Option>
                             <Option value="dance">Dance</Option>
                         </Select>
-                    </div>
-                    <div>
-                        <label className="block text-white mb-1">Description *</label>
-                        <TextArea rows={3} placeholder="Description" className="!bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500" />
-                    </div>
-                    <div>
-                        <label className="block text-white mb-1">Price amount *</label>
-                        <InputNumber placeholder="Price" className="w-full !bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500 input-number-dark" />
-                    </div>
-                    <div>
-                        <label className="block text-white mb-1">Campaign image(Optional) *</label>
-                        <Upload.Dragger className="!bg-[#2e2e48] !border-[#444] !border-dashed hover:!border-purple-500">
-                            <p className="ant-upload-drag-icon"><UploadCloud className="text-gray-400 mx-auto" /></p>
-                            <p className="text-gray-400">Upload an Image</p>
+                    </Form.Item >
+                    <Form.Item
+                        name="description"
+                        label={<span className="text-white">Description *</span>}
+                        rules={[
+                            { required: true, message: 'Please enter description' },
+                            { min: 20, max: 300, message: 'Description must be between 20 and 300 characters' }
+                        ]}
+                    >
+                        <TextArea
+                            rows={3}
+                            placeholder="Description"
+                            className="!bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500"
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        name="pricePool"
+                        label={<span className="text-white">Price amount *</span>}
+                        rules={[{ required: true, message: 'Please enter price amount' }]}
+                    >
+                        <InputNumber
+                            placeholder="Price"
+                            className="!w-full !bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500 input-number-dark"
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        name="campaignImageUrl"
+                        label={<span className="text-white">Campaign image(Optional)</span>}
+                        rules={[{ required: false, message: 'Please upload an image' }]}
+                    >
+                        <Upload.Dragger
+                            className="!bg-[#2e2e48] !border-[#444] !border-dashed hover:!border-purple-500"
+                            accept="image/*"
+                            showUploadList={true}
+                            beforeUpload={async (file) => {
+                                try {
+                                    const imgForm = new FormData();
+                                    imgForm.append("image", file);
+
+                                    const res = await uploadCampaignImage(imgForm, { successMsg: true, errorMsg: true });
+
+                                    if (res?.data?.success) {
+
+                                        const url = res.data.data.campaignImageUrl;
+
+                                        setImageUrl(url);
+
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            campaignImageUrl: url,
+                                        }));
+
+                                        form.setFieldValue("campaignImageUrl", url);
+                                        onFormValuesChange({}, { ...form.getFieldsValue(), campaignImageUrl: url });
+                                    }
+                                } catch (err) {
+                                    console.error("Upload failed", err);
+                                }
+
+                                return false;
+                            }}
+                        >
+                            <>
+                                <p className="ant-upload-drag-icon">
+                                    <UploadCloud className="text-gray-400 mx-auto" />
+                                </p>
+                                <p className="text-gray-400">Click or drag file to upload</p>
+                            </>
                         </Upload.Dragger>
-                    </div>
-                </div>
+
+                        {imageUrl && (
+                            <div className="mt-3">
+                                <img
+                                    src={imageUrl}
+                                    alt="Uploaded preview"
+                                    className="w-full h-40 object-cover rounded-md border border-[#444]"
+                                />
+                            </div>
+                        )}
+
+                    </Form.Item>
+                </div >
             )
         },
         {
@@ -95,66 +259,68 @@ export default function CampaignManagementPage() {
             content: (
                 <div className="flex flex-col gap-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-white mb-1">Campaign Start Date *</label>
+                        <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </div>
-                        <div>
-                            <label className="block text-white mb-1">Campaign End Date *</label>
+                        </Form.Item>
+                        <Form.Item name="completeTime" label={<span className="text-white">Campaign End Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </div>
-                        <div>
-                            <label className="block text-white mb-1">Voting Start Date *</label>
+                        </Form.Item>
+                        <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </div>
-                        <div>
-                            <label className="block text-white mb-1">Voting End Date *</label>
+                        </Form.Item>
+                        <Form.Item name="votingEndTime" label={<span className="text-white">Voting End Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </div>
-                        <div>
-                            <label className="block text-white mb-1">Review Start *</label>
+                        </Form.Item>
+                        <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </div>
-                        <div>
-                            <label className="block text-white mb-1">Review End *</label>
+                        </Form.Item>
+                        <Form.Item name="reviewEndTime" label={<span className="text-white">Review End *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </div>
+                        </Form.Item>
                     </div>
 
                     <div>
                         <h4 className="text-white font-semibold mb-3">Campaign Settings</h4>
                         <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label className="block text-white mb-1">Max Participants *</label>
-                                <Input placeholder="Leave empty for unlimited" className="!bg-[#2e2e48] !border-[#444] !text-white" />
-                            </div>
-                            <div>
-                                <label className="block text-white mb-1">Age Restriction *</label>
-                                <Input placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" />
-                            </div>
+                            <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants *</span>} rules={[{ required: true, message: 'Required' }]}>
+                                <Input placeholder="Leave empty for unlimited" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
+                            </Form.Item>
+                            <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age Restriction *</span>} rules={[{ required: true, message: 'Required' }]}>
+                                <Input placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
+                            </Form.Item>
                         </div>
 
                         <div className="flex flex-col gap-3">
-                            <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
+                            {/* <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
                                 <div>
                                     <div className="text-white font-medium">Featured Campaign</div>
                                     <div className="text-gray-400 text-xs">Show in featured section with special highlighting</div>
                                 </div>
-                                <Switch />
-                            </div>
+                                <Form.Item name="featured" valuePropName="checked" noStyle><Switch /></Form.Item>
+                            </div> */}
+
+                            <Form.Item name="featured" valuePropName="checked">
+                                <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
+                                    <div>
+                                        <div className="text-white font-medium">Featured Campaign</div>
+                                        <div className="text-gray-400 text-xs">Show in featured section</div>
+                                    </div>
+                                    <Switch />
+                                </div>
+                            </Form.Item>
                             <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
                                 <div>
                                     <div className="text-white font-medium">Requires Approval</div>
                                     <div className="text-gray-400 text-xs">Manually approve participants before they can compete</div>
                                 </div>
-                                <Switch />
+                                <Form.Item name="requiresApproval" valuePropName="checked" noStyle><Switch /></Form.Item>
                             </div>
                             <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
                                 <div>
                                     <div className="text-white font-medium">Public Voting</div>
                                     <div className="text-gray-400 text-xs">Allow Public to vote on submission</div>
                                 </div>
-                                <Switch />
+                                <Form.Item name="publicVoting" valuePropName="checked" noStyle><Switch /></Form.Item>
                             </div>
                         </div>
                     </div>
@@ -198,22 +364,27 @@ export default function CampaignManagementPage() {
 
                     <div className="grid grid-cols-2 gap-y-4 text-sm mb-6">
                         <div className="text-gray-400">Title</div>
-                        <div className="text-right font-medium">Hiru</div>
+                        <div className="text-right font-medium">{formData.title}</div>
 
                         <div className="text-gray-400">Category</div>
-                        <div className="text-right font-medium">Rock</div>
+                        <div className="text-right font-medium">{formData.category}</div>
 
                         <div className="text-gray-400">Prize</div>
-                        <div className="text-right font-medium">$10000</div>
+                        <div className="text-right font-medium">{formData.pricePool}</div>
                     </div>
 
                     <div className="mb-6">
                         <h4 className="font-semibold mb-2">Schedule & Settings</h4>
                         <div className="grid grid-cols-2 gap-y-2 text-sm">
                             <div className="text-gray-400">Campaign Start - End</div>
-                            <div className="text-right">mm/dd/yy - mm/dd/yy</div>
-                            <div className="text-gray-400">Voting Start - End</div>
-                            <div className="text-right">mm/dd/yy - mm/dd/yy</div>
+                            <div className="text-right">
+                                {formData.enrollStartTime ? dayjs(formData.enrollStartTime).format('YYYY-MM-DD') : 'Not set'} -
+                                {formData.completeTime ? dayjs(formData.completeTime).format('YYYY-MM-DD') : 'Not set'}
+                            </div>                            <div className="text-gray-400">Voting Start - End</div>
+                            <div className="text-right">
+                                {formData.votingStartTime ? dayjs(formData.votingStartTime).format('YYYY-MM-DD') : 'Not set'} -
+                                {formData.votingEndTime ? dayjs(formData.votingEndTime).format('YYYY-MM-DD') : 'Not set'}
+                            </div>
                         </div>
                     </div>
 
@@ -229,7 +400,6 @@ export default function CampaignManagementPage() {
         }
     ];
 
-    // Campaign Card Component
     const CampaignCard = ({ data }) => (
         <div className="bg-[#f2f2f2] p-6 rounded-xl flex flex-col justify-between h-full">
             <div>
@@ -287,10 +457,10 @@ export default function CampaignManagementPage() {
             </div>
 
             <div className="flex gap-3 mt-auto">
-                <Button className="flex-1 bg-[#333] text-white hover:!bg-[#444] border-none h-10 flex items-center justify-center gap-2">
+                <Button className="flex-1 !bg-[#333] !text-white hover:!bg-[#444] !border-none h-10 flex items-center justify-center gap-2">
                     <Eye size={16} /> LeaderBoard
                 </Button>
-                <Button className="bg-[#b30000] text-white hover:!bg-[#cc0000] border-none h-10 px-6 font-medium">
+                <Button className="!bg-[#b30000] !text-white hover:!bg-[#cc0000] !border-none h-10 px-6 font-medium">
                     Edit
                 </Button>
             </div>
@@ -310,13 +480,14 @@ export default function CampaignManagementPage() {
                 </Button>
             </div>
 
-            {/* Controls */}
-            <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col gap-2 mb-6">
                 <Tabs
                     defaultActiveKey="1"
-                    className="custom-tabs"
+                    activeKey={activeTab}
+                    onChange={setActiveTab}
+                    className="custom-tabs gap-1"
                     items={[
-                        { key: '1', label: <span className="px-4 py-1 bg-pink-500 text-white rounded-md">All Campaigns</span> },
+                        { key: '1', label: 'All Campaigns' },
                         { key: '2', label: 'Active' },
                         { key: '3', label: 'Upcoming' },
                         { key: '4', label: 'Past' },
@@ -325,12 +496,10 @@ export default function CampaignManagementPage() {
                 <Input prefix={<Search className="text-gray-400" size={18} />} placeholder="Search by Campaign" className="!bg-[#f5f5f5] !border-none !h-12 !text-base !rounded-lg" />
             </div>
 
-            {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {campaigns.map(campaign => <CampaignCard key={campaign.id} data={campaign} />)}
+                {filteredCampaigns.map(campaign => <CampaignCard key={campaign.id} data={campaign} />)}
             </div>
 
-            {/* Custom Dark Theme Modal */}
             <ConfigProvider
                 theme={{
                     token: {
@@ -400,7 +569,17 @@ export default function CampaignManagementPage() {
                     </div>
 
                     <div className="min-h-[300px]">
-                        {steps[currentStep].content}
+                        <Form
+                            form={form}
+                            layout="vertical"
+                            onValuesChange={onFormValuesChange}
+                            initialValues={{
+                                minAgeLimit: 18,
+                            }}
+                            requiredMark={false}
+                        >
+                            {steps[currentStep].content}
+                        </Form>
                     </div>
 
                     <div className="flex gap-4 mt-8 pt-4 border-t border-[#333]">
@@ -416,14 +595,91 @@ export default function CampaignManagementPage() {
                             <Button
                                 type="primary"
                                 onClick={handleNext}
-                                className="flex-1 !bg-[#0000aa] !border-none !h-11 font-medium hover:!bg-[#0000cc]"
+                                disabled={!isStepValid}
+                                className="flex-1 !bg-[#0000aa] !border-none !h-11 font-medium hover:!bg-[#0000cc] disabled:!bg-gray-600 disabled:!text-gray-400"
                             >
                                 Next
                             </Button>
                         ) : (
                             <Button
                                 type="primary"
-                                onClick={handleCancel}
+                                onClick={async () => {
+                                    try {
+                                        // Get all form values
+                                        const formValues = form.getFieldsValue();
+
+                                        console.log("formValues", formValues);
+
+
+                                        // Format date fields to ISO string
+                                        const formatDate = (date) => {
+                                            if (!date) return null;
+                                            return dayjs(date).toISOString();
+                                        };
+
+                                        const payload = {
+                                            title: formValues.title,
+                                            description: formValues.description,
+                                            pricePool: formValues.pricePool,
+                                            campaignImageUrl: formValues.campaignImageUrl || imageUrl,
+                                            enrollStartTime: formatDate(formValues.enrollStartTime),
+                                            reviewStartTime: formatDate(formValues.reviewStartTime),
+                                            votingStartTime: formatDate(formValues.votingStartTime),
+                                            completeTime: formatDate(formValues.completeTime),
+                                            votingEndTime: formatDate(formValues.votingEndTime),
+                                            reviewEndTime: formatDate(formValues.reviewEndTime),
+                                            maxParticipants: formValues.maxParticipants,
+                                            maxAgeLimit: formValues.maxAgeLimit,
+                                            minAgeLimit: formValues.minAgeLimit || 18,
+                                            featured: formValues.featured || false,
+                                            requiresApproval: formValues.requiresApproval || false,
+                                            publicVoting: formValues.publicVoting || false,
+                                            campaignRules: formValues.rules || [],
+                                            category: formValues.category,
+                                        };
+
+                                        console.log("Payload before API call:", payload); // Debug log
+
+                                        const res = await triggerCreate(payload, {
+                                            successMsg: true,
+                                            errorMsg: true
+                                        });
+
+                                        if (res?.data?.success) {
+                                            setIsModalOpen(false);
+                                            setCurrentStep(0);
+                                            form.resetFields();
+                                            setImageUrl('');
+                                            setFormData({
+                                                title: '',
+                                                category: '',
+                                                description: '',
+                                                price: '',
+                                                campaignImageUrl: null,
+                                                enrollStartTime: null,
+                                                completeTime: null,
+                                                votingStartTime: null,
+                                                votingEndTime: null,
+                                                reviewStartTime: null,
+                                                reviewEndTime: null,
+                                                maxParticipants: '',
+                                                maxAgeLimit: '',
+                                                minAgeLimit: 18,
+                                                pricePool: '',
+                                                featured: false,
+                                                requiresApproval: false,
+                                                publicVoting: false,
+                                                rules: [],
+                                            });
+                                        }
+                                    } catch (error) {
+                                        console.error("Error creating campaign:", error);
+                                        message.error("Failed to create campaign. Please check all fields.");
+                                    }
+                                }}
+
+
+                                loading={createLoading}
                                 className="flex-1 !bg-[#0000aa] !border-none !h-11 font-medium hover:!bg-[#0000cc]"
                             >
                                 Done
@@ -433,12 +689,11 @@ export default function CampaignManagementPage() {
                 </Modal>
             </ConfigProvider>
 
-            {/* Global style override for Select dropdowns only as they are portals */}
-            <style jsx global>{`
+            {/* <style jsx global>{`
                 .custom-select .ant-select-selector { background-color: #2e2e48 !important; border-color: #444 !important; color: white !important; }
                 .custom-select .ant-select-arrow { color: white !important; }
                 .input-number-dark .ant-input-number-handler-wrap { background-color: #444 !important; }
-            `}</style>
+            `}</style> */}
         </div>
     );
 }

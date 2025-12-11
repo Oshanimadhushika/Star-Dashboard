@@ -5,9 +5,8 @@ import { Form, Input, Button } from 'antd';
 import { AudioOutlined, MailOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { loginUser } from '@/app/services/authService';
-// import { setLocalStorageData } from '@/app/helpers/storageHelper';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
-import { getCookie } from '@/app/helpers/storageHelper';
+import { getCookie, setCookie } from '@/app/helpers/storageHelper';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -15,18 +14,15 @@ export default function LoginPage() {
 
     const { trigger: triggerLogin, loading } = useLazyFetch(loginUser);
 
-    const token = getCookie('auth-token');
-
-    console.log(token);
-
-
     const onFinish = async (values) => {
         const response = await triggerLogin(values, {
             successMsg: true,
             errorMsg: true
         });
 
+
         if (response?.data.success) {
+            setCookie('auth-token', response?.data?.data, 1);
             router.push('/');
         }
     };

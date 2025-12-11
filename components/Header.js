@@ -57,7 +57,7 @@ export default function Header({ collapsed }) {
                 <Badge count={2} size="small">
                     <BellOutlined style={{ color: 'black' }} className="text-xl text-gray-600 cursor-pointer" />
                 </Badge>
-                <Avatar icon={<UserOutlined />} className="bg-gradient-to-r from-purple-500 to-pink-500 cursor-pointer" />
+                {/* <Avatar icon={<UserOutlined />} className="bg-gradient-to-r from-purple-500 to-pink-500 cursor-pointer" /> */}
             </div>
         </AntHeader>
     );

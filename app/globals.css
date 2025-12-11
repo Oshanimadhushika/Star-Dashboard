@@ -24,3 +24,55 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Sidebar Custom Overrides */
+.ant-menu-item {
+  margin-bottom: 8px !important;
+  border-radius: 8px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+.ant-menu-item-selected {
+  background-color: #8b0000 !important; /* Dark Red/Pink from image */
+  background: linear-gradient(90deg, #a6009d 0%, #8b0000 100%) !important;
+  color: white !important;
+}
+.ant-menu-item:hover {
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+.ant-layout-sider {
+  background: #2a0036 !important;
+}
+
+/* Custom Tabs Styling (Pills) */
+.custom-tabs .ant-tabs-nav::before {
+  border-bottom: none !important;
+}
+
+.custom-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}
+
+.custom-tabs .ant-tabs-tab {
+  border: 1px solid #e5e7eb !important; /* gray-200 */
+  border-radius: 8px !important; /* Rounded corners */
+  padding: 6px 20px !important;
+  margin-right: 12px !important;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.custom-tabs .ant-tabs-tab-active {
+  background: #ec4899 !important; /* Pink-500 */
+  border-color: #ec4899 !important;
+}
+
+.custom-tabs .ant-tabs-tab-btn {
+  color: #374151 !important; /* gray-700 */
+  font-weight: 500;
+}
+
+.custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: white !important;
+  text-shadow: none !important;
+}

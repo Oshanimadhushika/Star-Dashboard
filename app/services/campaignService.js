@@ -1,0 +1,9 @@
+import { authorizedAxiosInstance, authorizedFileUploadAxiosInstance } from "@/app/helpers/axiosInstance";
+
+export const uploadCampaignImage = async (data) => {
+    return authorizedFileUploadAxiosInstance.post("/campaign/admin/upload-image", data);
+};
+
+export const createCampaign = async (data) => {
+    return authorizedAxiosInstance.post("/campaign/admin/create", data);
+};
