@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Input, Button, Modal, Tabs, Upload, Select, DatePicker, Switch, Steps, InputNumber, message, ConfigProvider, Form } from 'antd';
-import { Search, Trophy, Calendar, Users, Video, Award, Eye, Edit, Plus, Info, UploadCloud, X, Check, CheckCircle } from 'lucide-react';
+import { Input, Button, Modal, Tabs, Upload, Select, DatePicker, Switch, Steps, InputNumber, message, ConfigProvider, Form, Table, Tag } from 'antd';
+import { Search, Trophy, Calendar, Users, Video, Award, Eye, Edit, Plus, Info, UploadCloud, X, Check, CheckCircle, Save } from 'lucide-react';
 import { createCampaign, uploadCampaignImage, getAllCampaigns } from '@/app/services/campaignService';
 import CustomPagination from "@/components/CustomPagination";
 import useLazyFetch from '@/app/hooks/useLazyFetch';
@@ -13,12 +13,19 @@ const { Option } = Select;
 
 export default function CampaignManagementPage() {
     const [form] = Form.useForm();
+    const [editForm] = Form.useForm();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+    const [isEditDirty, setIsEditDirty] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
+
+    const [selectedCampaign, setSelectedCampaign] = useState(null);
+
+
     const [formData, setFormData] = useState({
         title: '',
-        // category: '',
         description: '',
         price: '',
         campaignImageUrl: null,
@@ -41,7 +48,6 @@ export default function CampaignManagementPage() {
     const [isStepValid, setIsStepValid] = useState(false);
 
 
-    // API Hooks
     const { trigger: triggerCreate, loading: createLoading } = useLazyFetch(createCampaign);
     const { trigger: triggerFetch, loading: fetchLoading } = useLazyFetch(getAllCampaigns);
     const { trigger: triggerUpload, loading: uploadLoading } = useLazyFetch(uploadCampaignImage);
@@ -76,6 +82,7 @@ export default function CampaignManagementPage() {
         const res = await triggerFetch(params);
         if (res?.data?.success) {
             const { data, total, page, perPage } = res.data.data;
+
             setFetchedCampaigns(data);
             setPagination(prev => ({ ...prev, current: page, total, pageSize: perPage }));
         }
@@ -93,7 +100,7 @@ export default function CampaignManagementPage() {
 
 
     const stepFields = {
-        0: ["title", /*"category",*/ "description", "pricePool"],
+        0: ["title", "description", "pricePool"],
         1: [
             "enrollStartTime", "completeTime", "votingStartTime", // "votingEndTime",
             "reviewStartTime", // "reviewEndTime", 
@@ -108,10 +115,16 @@ export default function CampaignManagementPage() {
         const fieldsToValidate = stepFields[currentStep];
 
         const errors = form.getFieldsError(fieldsToValidate);
-
         const hasError = errors.some((field) => field.errors.length > 0);
 
-        setIsStepValid(!hasError);
+        const values = form.getFieldsValue(fieldsToValidate);
+        const hasEmptyFields = fieldsToValidate.some(field => {
+            const value = values[field];
+            return value === undefined || value === null || value === '';
+        });
+
+
+        setIsStepValid(!hasError && !hasEmptyFields);
     };
 
     useEffect(() => {
@@ -182,20 +195,7 @@ export default function CampaignManagementPage() {
                             className="!bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500"
                         />
                     </Form.Item>
-                    {/* <Form.Item
-                        name="category"
-                        label={<span className="text-white">Category *</span>}
-                        rules={[{ required: true, message: 'Please select a category' }]}
-                    >
-                        <Select
-                            placeholder="Select Category"
-                            className="w-full custom-select !bg-[#2e2e48]"
-                            styles={{ popup: { backgroundColor: '#2e2e48', color: 'white' } }}
-                        >
-                            <Option value="music">Music</Option>
-                            <Option value="dance">Dance</Option>
-                        </Select>
-                    </Form.Item > */}
+
                     <Form.Item
                         name="description"
                         label={<span className="text-white">Description *</span>}
@@ -218,13 +218,26 @@ export default function CampaignManagementPage() {
                         <InputNumber
                             placeholder="Price"
                             className="!w-full !bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500 input-number-dark"
+                            min={0}
+
+                            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            parser={(value) => value?.replace(/\D/g, '')}
+                            onKeyPress={(event) => {
+                                if (!/[0-9]/.test(event.key)) {
+                                    event.preventDefault();
+                                }
+                            }}
                         />
                     </Form.Item>
                     <Form.Item
                         name="campaignImageUrl"
-                        label={<span className="text-white">Campaign image(Optional)</span>}
                         rules={[{ required: false, message: 'Please upload an image' }]}
+                        style={{ display: 'none' }}
                     >
+                        <Input />
+                    </Form.Item>
+
+                    <Form.Item label={<span className="text-white">Campaign image(Optional)</span>}>
                         <Upload.Dragger
                             className="!bg-[#2e2e48] !border-[#444] !border-dashed hover:!border-purple-500"
                             accept="image/*"
@@ -264,18 +277,16 @@ export default function CampaignManagementPage() {
                                 <p className="text-gray-400">Click or drag file to upload</p>
                             </>
                         </Upload.Dragger>
-
-                        {imageUrl && (
-                            <div className="mt-3">
-                                <img
-                                    src={imageUrl}
-                                    alt="Uploaded preview"
-                                    className="w-full h-40 object-cover rounded-md border border-[#444]"
-                                />
-                            </div>
-                        )}
-
                     </Form.Item>
+                    {imageUrl && (
+                        <div className="mt-3">
+                            <img
+                                src={imageUrl}
+                                alt="Uploaded preview"
+                                className="w-full h-40 object-cover rounded-md border border-[#444]"
+                            />
+                        </div>
+                    )}
                 </div >
             )
         },
@@ -285,13 +296,32 @@ export default function CampaignManagementPage() {
                 <div className="flex flex-col gap-6">
                     <div className="grid grid-cols-2 gap-4">
                         <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                            <DatePicker
+                                className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                disabledDate={(current) => {
+                                    return current && current < dayjs().startOf('day');
+                                }}
+                            />
                         </Form.Item>
                         <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start Date*</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                            <DatePicker
+                                className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                disabledDate={(current) => {
+                                    const enrollStart = form.getFieldValue('enrollStartTime');
+                                    if (!enrollStart) return current && current < dayjs().startOf('day');
+                                    return current && current < dayjs(enrollStart).endOf('day');
+                                }}
+                            />
                         </Form.Item>
                         <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                            <DatePicker
+                                className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                disabledDate={(current) => {
+                                    const reviewStart = form.getFieldValue('reviewStartTime');
+                                    if (!reviewStart) return current && current < dayjs().startOf('day');
+                                    return current && current < dayjs(reviewStart).endOf('day');
+                                }}
+                            />
                         </Form.Item>
                         <Form.Item name="completeTime" label={<span className="text-white">Complete Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker
@@ -390,8 +420,7 @@ export default function CampaignManagementPage() {
                         <div className="text-gray-400">Title</div>
                         <div className="text-right font-medium">{formData.title}</div>
 
-                        {/* <div className="text-gray-400">Category</div>
-                        <div className="text-right font-medium">{formData.category}</div> */}
+
 
                         <div className="text-gray-400">Prize</div>
                         <div className="text-right font-medium">{formData.pricePool}</div>
@@ -424,15 +453,37 @@ export default function CampaignManagementPage() {
         }
     ];
 
+    const handleEdit = (campaign) => {
+        setSelectedCampaign(campaign);
+        editForm.setFieldsValue({
+            title: campaign.title,
+            enrollStartTime: campaign.enrollStartTime ? dayjs(campaign.enrollStartTime) : null,
+            completeTime: campaign.completeTime ? dayjs(campaign.completeTime) : null,
+            status: campaign.status || 'Active',
+        });
+        setIsEditDirty(false);
+        setIsEditModalOpen(true);
+    };
+
+    const handleLeaderboard = (campaign) => {
+        setSelectedCampaign(campaign);
+        setIsLeaderboardOpen(true);
+    };
+
     const CampaignCard = ({ data }) => (
         <div className="bg-[#f2f2f2] p-6 rounded-xl flex flex-col justify-between h-full">
             <div>
                 <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${data.iconColor}`}>
-                            <Trophy size={20} />
-                        </div>
-                        <h3 className="font-semibold text-lg">{data.title}</h3>
+                        {/* Use img tag for campaign image if available, else generic icon */}
+                        {data.campaignImageUrl ? (
+                            <img src={data.campaignImageUrl} alt={data.title} className="w-12 h-12 rounded-lg object-cover" />
+                        ) : (
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${data.iconColor}`}>
+                                <Trophy size={20} />
+                            </div>
+                        )}
+                        <h3 className="font-semibold text-lg line-clamp-1" title={data.title}>{data.title}</h3>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${data.statusColor}`}>
                         {data.status}
@@ -443,7 +494,7 @@ export default function CampaignManagementPage() {
                     <p className="text-gray-400 text-xs mb-1">Duration</p>
                     <div className="flex items-center gap-2 text-sm font-medium">
                         <Calendar size={16} />
-                        <span>{dayjs(data.enrollStartTime).format('YYYY-MM-DD')} - {dayjs(data.completeTime).format('YYYY-MM-DD')}</span>
+                        <span>{data.enrollStartTime ? dayjs(data.enrollStartTime).format('YYYY-MM-DD') : 'N/A'} - {data.completeTime ? dayjs(data.completeTime).format('YYYY-MM-DD') : 'N/A'}</span>
                     </div>
                 </div>
 
@@ -464,27 +515,19 @@ export default function CampaignManagementPage() {
                         <div className="text-xs text-gray-400">Votes</div>
                     </div>
                 </div>
-
-                {data.hasWinner && data.winner && (
-                    <div className="bg-[#fcf8e3] border border-[#faebcc] p-3 rounded-lg flex items-center gap-3 mb-6">
-                        <img src={data.winner.image} alt={data.winner.name} className="w-10 h-10 rounded-full object-cover" />
-                        <div>
-                            <div className="text-sm font-bold flex items-center gap-1">
-                                <span className="text-yellow-500">♛</span> Winner : {data.winner.name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                                {data.winner.song} • {data.winner.votes}
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
 
             <div className="flex gap-3 mt-auto">
-                <Button className="flex-1 !bg-[#333] !text-white hover:!bg-[#444] !border-none h-10 flex items-center justify-center gap-2">
+                <Button
+                    onClick={() => handleLeaderboard(data)}
+                    className="flex-1 !bg-[#333] !text-white hover:!bg-[#444] !border-none h-10 flex items-center justify-center gap-2"
+                >
                     <Eye size={16} /> LeaderBoard
                 </Button>
-                <Button className="!bg-[#b30000] !text-white hover:!bg-[#cc0000] !border-none h-10 px-6 font-medium">
+                <Button
+                    onClick={() => handleEdit(data)}
+                    className="!bg-[#b30000] !text-white hover:!bg-[#cc0000] !border-none h-10 px-6 font-medium"
+                >
                     Edit
                 </Button>
             </div>
@@ -529,17 +572,24 @@ export default function CampaignManagementPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {fetchedCampaigns.map(campaign => (
-                    <CampaignCard
-                        key={campaign.id}
-                        data={{
-                            ...campaign,
-                            status: 'Unknown',
-                            statusColor: 'text-gray-600 bg-gray-100',
-                            iconColor: 'bg-purple-100 text-purple-500'
-                        }}
-                    />
-                ))}
+                {fetchedCampaigns.map(campaign => {
+                    let statusColor = 'text-gray-600 bg-gray-100';
+                    switch (campaign.status) {
+                        case 'Active': statusColor = 'text-green-600 bg-green-100'; break;
+                        case 'Upcoming': statusColor = 'text-blue-600 bg-blue-100'; break;
+                        case 'Completed': statusColor = 'text-gray-600 bg-gray-100'; break;
+                    }
+                    return (
+                        <CampaignCard
+                            key={campaign.id}
+                            data={{
+                                ...campaign,
+                                statusColor,
+                                iconColor: 'bg-purple-100 text-purple-500'
+                            }}
+                        />
+                    );
+                })}
             </div>
 
             <CustomPagination
@@ -684,7 +734,6 @@ export default function CampaignManagementPage() {
                                             // requiresApproval: formValues.requiresApproval || false,
                                             // publicVoting: formValues.publicVoting || false,
                                             campaignRules: formValues.rules || [],
-                                            // category: formValues.category,
                                         };
 
 
@@ -700,7 +749,6 @@ export default function CampaignManagementPage() {
                                             setImageUrl('');
                                             setFormData({
                                                 title: '',
-                                                // category: '',
                                                 description: '',
                                                 price: '',
                                                 campaignImageUrl: null,
@@ -719,6 +767,7 @@ export default function CampaignManagementPage() {
                                                 // publicVoting: false,
                                                 rules: [],
                                             });
+                                            fetchCampaigns();
                                         }
                                     } catch (error) {
                                         console.error("Error creating campaign:", error);
@@ -735,8 +784,79 @@ export default function CampaignManagementPage() {
                         )}
                     </div>
                 </Modal>
-            </ConfigProvider>
 
+
+
+                <Modal
+                    title={<div className="text-white flex items-center gap-2"><Edit size={18} /> Edit Campaign</div>}
+                    open={isEditModalOpen}
+                    onCancel={() => setIsEditModalOpen(false)}
+                    footer={null}
+                    styles={{ mask: { backdropFilter: 'blur(5px)' } }}
+                    closeIcon={<X className="text-white" />}
+                >
+                    <Form form={editForm} layout="vertical" onValuesChange={() => setIsEditDirty(true)} onFinish={(values) => {
+                        console.log("Updated Values:", values);
+                        message.success("Campaign updated successfully (Mock)");
+                        setIsEditModalOpen(false);
+                    }}>
+                        <Form.Item name="title" label={<span className="text-white">Campaign Title</span>} rules={[{ required: true }]}>
+                            <Input className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                        </Form.Item>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start</span>}>
+                                <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                            </Form.Item>
+                            <Form.Item name="completeTime" label={<span className="text-white">End Date</span>}>
+                                <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                            </Form.Item>
+                        </div>
+                        <Form.Item name="status" label={<span className="text-white">Status</span>}>
+                            <Select className="!bg-[#2e2e48]" classNames={{ popup: '!bg-[#2e2e48]' }} >
+                                <Option value="Active">Active</Option>
+                                <Option value="Upcoming">Upcoming</Option>
+                                <Option value="Completed">Completed</Option>
+                            </Select>
+                        </Form.Item>
+                        <Button type="primary" htmlType="submit" disabled={!isEditDirty} className="w-full !bg-pink-600 !border-none h-10 disabled:!bg-gray-600 disabled:!text-gray-400">
+                            Save Changes
+                        </Button>
+                    </Form>
+                </Modal>
+
+                <Modal
+                    title={<div className="text-white flex items-center gap-2"><Trophy size={18} /> {selectedCampaign?.title} - Leaderboard</div>}
+                    open={isLeaderboardOpen}
+                    onCancel={() => setIsLeaderboardOpen(false)}
+                    footer={null}
+                    width={800}
+                    styles={{ mask: { backdropFilter: 'blur(5px)' } }}
+                    closeIcon={<X className="text-white" />}
+                >
+                    <Table
+                        dataSource={[
+                            { key: 1, rank: 1, name: 'Sarah J', song: 'Shape of You', votes: 1240 },
+                            { key: 2, rank: 2, name: 'Mike T', song: 'Perfect', votes: 980 },
+                            { key: 3, rank: 3, name: 'Jessica L', song: 'Halo', votes: 850 },
+                        ]}
+                        columns={[
+                            { title: 'Rank', dataIndex: 'rank', key: 'rank', render: (r) => <div className="w-6 h-6 rounded-full bg-yellow-500 text-black font-bold flex items-center justify-center">{r}</div> },
+                            { title: 'Participant', dataIndex: 'name', key: 'name', render: (t) => <span className="text-white font-medium">{t}</span> },
+                            { title: 'Song', dataIndex: 'song', key: 'song', render: (t) => <span className="text-gray-400">{t}</span> },
+                            { title: 'Votes', dataIndex: 'votes', key: 'votes', render: (v) => <span className="text-pink-500 font-bold">{v}</span> },
+                        ]}
+                        pagination={false}
+                        className="custom-table mt-4"
+                    />
+                    <style jsx global>{`
+                        .custom-table .ant-table { background: transparent; }
+                        .custom-table .ant-table-thead > tr > th { background: #2a2a40; color: #a1a1aa; border-bottom: 1px solid #333; }
+                        .custom-table .ant-table-tbody > tr > td { border-bottom: 1px solid #333; }
+                        .custom-table .ant-table-tbody > tr:hover > td { background: #2a2a40 !important; }
+                    `}</style>
+                </Modal>
+
+            </ConfigProvider>
 
         </div>
     );

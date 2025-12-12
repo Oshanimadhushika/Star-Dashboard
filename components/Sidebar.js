@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Button } from 'antd';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     AppstoreOutlined,
     UserOutlined,
@@ -19,11 +19,25 @@ import {
     LeftOutlined,
     RightOutlined,
 } from '@ant-design/icons';
+import { logoutUser } from '@/app/services/authService';
+import useLazyFetch from '@/app/hooks/useLazyFetch';
+import { removeCookie, removeLocalStorageData } from '@/app/helpers/storageHelper';
 
 const { Sider } = Layout;
 
 export default function Sidebar({ collapsed, setCollapsed }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const { trigger: triggerLogout } = useLazyFetch(logoutUser);
+
+    const handleLogout = async () => {
+        const res = await triggerLogout({}, { successMsg: true, errorMsg: true });
+        if (res?.data?.success) {
+            removeCookie("auth-token");
+            removeLocalStorageData("userData");
+            router.push("/login");
+        }
+    };
 
     const menuItems = [
         {
@@ -132,6 +146,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                         mode="inline"
                         selectable={false}
                         className="!bg-transparent border-none"
+                        onClick={({ key }) => {
+                            if (key === 'logout') {
+                                handleLogout();
+                            }
+                        }}
                         items={[
                             {
                                 key: 'logout',
