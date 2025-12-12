@@ -133,7 +133,7 @@ export default function UserManagementPage() {
             {/* Pagination */}
             <CustomPagination
                 current={currentPage}
-                total={dummyData.length * 3} // Mock total
+                total={dummyData.length * 3}
                 pageSize={10}
                 onChange={(page) => setCurrentPage(page)}
             />

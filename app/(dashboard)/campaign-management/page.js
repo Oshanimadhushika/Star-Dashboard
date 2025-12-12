@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { Input, Button, Modal, Tabs, Upload, Select, DatePicker, Switch, Steps, InputNumber, message, ConfigProvider, Form } from 'antd';
 import { Search, Trophy, Calendar, Users, Video, Award, Eye, Edit, Plus, Info, UploadCloud, X, Check, CheckCircle } from 'lucide-react';
-import { createCampaign, uploadCampaignImage } from '@/app/services/campaignService';
+import { createCampaign, uploadCampaignImage, getAllCampaigns } from '@/app/services/campaignService';
+import CustomPagination from "@/components/CustomPagination";
 import useLazyFetch from '@/app/hooks/useLazyFetch';
 import dayjs from 'dayjs';
 
@@ -42,40 +43,61 @@ export default function CampaignManagementPage() {
 
     // API Hooks
     const { trigger: triggerCreate, loading: createLoading } = useLazyFetch(createCampaign);
+    const { trigger: triggerFetch, loading: fetchLoading } = useLazyFetch(getAllCampaigns);
+    const { trigger: triggerUpload, loading: uploadLoading } = useLazyFetch(uploadCampaignImage);
+
+    const [fetchedCampaigns, setFetchedCampaigns] = useState([]);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0
+    });
+    const [searchQuery, setSearchQuery] = useState('');
     const [newRule, setNewRule] = useState('');
-
-    const campaigns = [
-        { id: 1, title: "Summer Idol 2025", status: "In Review", statusColor: "text-green-600 bg-green-100", duration: "2025-06-01 - 2025-08-31", participants: 342, videos: 1200, votes: "45,890", iconColor: "bg-pink-100 text-pink-500", hasWinner: false },
-        { id: 2, title: "Voice-Teen", status: "Completed", statusColor: "text-purple-600 bg-purple-100", duration: "2025-09-01 - 2025-10-31", participants: 467, videos: 188, votes: "76,987", iconColor: "bg-pink-100 text-pink-500", hasWinner: true, winner: { name: "Sally Wilz", song: "Shape of u (Cover)", votes: "15.5k Votes", image: "https://i.pravatar.cc/150?u=a042581f4e29026024d" } },
-        { id: 3, title: "Rising Star", status: "Voting Started", statusColor: "text-orange-500 bg-orange-100", duration: "2025-09-01 - 2025-10-31", participants: 120, videos: 450, votes: "12,300", iconColor: "bg-pink-100 text-pink-500", hasWinner: false },
-        { id: 4, title: "Rising Star", status: "Voting Started", statusColor: "text-orange-500 bg-orange-100", duration: "2025-09-01 - 2025-10-31", participants: 120, videos: 450, votes: "12,300", iconColor: "bg-pink-100 text-pink-500", hasWinner: false }
-    ];
-
-    const showModal = () => setIsModalOpen(true);
-    const handleCancel = () => { setIsModalOpen(false); setCurrentStep(0); };
     const [activeTab, setActiveTab] = useState('1');
 
-    const getFilteredCampaigns = () => {
+
+    const fetchCampaigns = async () => {
+        let status = '';
         switch (activeTab) {
-            case '2': // Active
-                return campaigns.filter(c => c.status === "Voting Started");
-            case '3': // Upcoming
-                return campaigns.filter(c => c.status === "In Review");
-            case '4': // Past
-                return campaigns.filter(c => c.status === "Completed");
-            default: // All
-                return campaigns;
+            case '2': status = 'active'; break;
+            case '3': status = 'upcoming'; break;
+            case '4': status = 'completed'; break;
+            default: status = ''; break;
+        }
+
+        const params = {
+            page: pagination.current,
+            perPage: pagination.pageSize,
+            search: searchQuery,
+            campaignStatus: status
+        };
+
+        const res = await triggerFetch(params);
+        if (res?.data?.success) {
+            const { data, total, page, perPage } = res.data.data;
+            setFetchedCampaigns(data);
+            setPagination(prev => ({ ...prev, current: page, total, pageSize: perPage }));
         }
     };
 
-    const filteredCampaigns = getFilteredCampaigns();
+    useEffect(() => {
+        fetchCampaigns();
+    }, [pagination.current, pagination.pageSize, searchQuery, activeTab]);
+
+
+    const showModal = () => setIsModalOpen(true);
+    const handleCancel = () => { setIsModalOpen(false); setCurrentStep(0); };
+
+
 
 
     const stepFields = {
-        0: ["title", "category", "description", "pricePool"],
+        0: ["title", /*"category",*/ "description", "pricePool"],
         1: [
-            "enrollStartTime", "completeTime", "votingStartTime", "votingEndTime",
-            "reviewStartTime", "reviewEndTime", "maxParticipants", "maxAgeLimit"
+            "enrollStartTime", "completeTime", "votingStartTime", // "votingEndTime",
+            "reviewStartTime", // "reviewEndTime", 
+            "maxParticipants", "maxAgeLimit"
         ],
         2: [],
         3: []
@@ -100,14 +122,10 @@ export default function CampaignManagementPage() {
         if (isModalOpen) {
             form.setFieldsValue(formData);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStep, form, isModalOpen]);
 
-    // const onFormValuesChange = () => {
-    //     validateCurrentStep();
-    // };
 
-    const onFormValuesChange = (changedValues, allValues) => {
+    const onFormValuesChange = (allValues) => {
         setFormData(prev => ({ ...prev, ...allValues }));
         validateCurrentStep();
     };
@@ -153,14 +171,18 @@ export default function CampaignManagementPage() {
                     <Form.Item
                         name="title"
                         label={<span className="text-white">Campaign Title *</span>}
-                        rules={[{ required: true, message: 'Please enter campaign title' }]}
+                        rules={[
+                            { required: true, message: 'Please enter campaign title' },
+                            { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' }
+                        ]}
                     >
                         <Input
+
                             placeholder="Enter Campaign Title"
                             className="!bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500"
                         />
                     </Form.Item>
-                    <Form.Item
+                    {/* <Form.Item
                         name="category"
                         label={<span className="text-white">Category *</span>}
                         rules={[{ required: true, message: 'Please select a category' }]}
@@ -173,7 +195,7 @@ export default function CampaignManagementPage() {
                             <Option value="music">Music</Option>
                             <Option value="dance">Dance</Option>
                         </Select>
-                    </Form.Item >
+                    </Form.Item > */}
                     <Form.Item
                         name="description"
                         label={<span className="text-white">Description *</span>}
@@ -212,7 +234,7 @@ export default function CampaignManagementPage() {
                                     const imgForm = new FormData();
                                     imgForm.append("image", file);
 
-                                    const res = await uploadCampaignImage(imgForm, { successMsg: true, errorMsg: true });
+                                    const res = await triggerUpload(imgForm, { successMsg: true, errorMsg: true });
 
                                     if (res?.data?.success) {
 
@@ -262,24 +284,31 @@ export default function CampaignManagementPage() {
             content: (
                 <div className="flex flex-col gap-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
+                        <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                         </Form.Item>
-                        <Form.Item name="completeTime" label={<span className="text-white">Campaign End Date *</span>} rules={[{ required: true, message: 'Required' }]}>
+                        <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start Date*</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                         </Form.Item>
                         <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                         </Form.Item>
-                        <Form.Item name="votingEndTime" label={<span className="text-white">Voting End Date *</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                        <Form.Item name="completeTime" label={<span className="text-white">Complete Date *</span>} rules={[{ required: true, message: 'Required' }]}>
+                            <DatePicker
+                                className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                disabledDate={(current) => {
+                                    const votingStart = form.getFieldValue('votingStartTime');
+                                    if (!votingStart) return false;
+                                    return current && current <= dayjs(votingStart).endOf('day');
+                                }}
+                            />
                         </Form.Item>
-                        <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start *</span>} rules={[{ required: true, message: 'Required' }]}>
+                        {/* <Form.Item name="votingEndTime" label={<span className="text-white">Voting End Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </Form.Item>
-                        <Form.Item name="reviewEndTime" label={<span className="text-white">Review End *</span>} rules={[{ required: true, message: 'Required' }]}>
+                        </Form.Item> */}
+                        {/* <Form.Item name="reviewEndTime" label={<span className="text-white">Review End *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </Form.Item>
+                        </Form.Item> */}
                     </div>
 
                     <div>
@@ -293,15 +322,7 @@ export default function CampaignManagementPage() {
                             </Form.Item>
                         </div>
 
-                        <div className="flex flex-col gap-3">
-                            {/* <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
-                                <div>
-                                    <div className="text-white font-medium">Featured Campaign</div>
-                                    <div className="text-gray-400 text-xs">Show in featured section with special highlighting</div>
-                                </div>
-                                <Form.Item name="featured" valuePropName="checked" noStyle><Switch /></Form.Item>
-                            </div> */}
-
+                        {/* <div className="flex flex-col gap-3">
                             <Form.Item name="featured" valuePropName="checked">
                                 <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
                                     <div>
@@ -325,7 +346,7 @@ export default function CampaignManagementPage() {
                                 </div>
                                 <Form.Item name="publicVoting" valuePropName="checked" noStyle><Switch /></Form.Item>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             )
@@ -369,8 +390,8 @@ export default function CampaignManagementPage() {
                         <div className="text-gray-400">Title</div>
                         <div className="text-right font-medium">{formData.title}</div>
 
-                        <div className="text-gray-400">Category</div>
-                        <div className="text-right font-medium">{formData.category}</div>
+                        {/* <div className="text-gray-400">Category</div>
+                        <div className="text-right font-medium">{formData.category}</div> */}
 
                         <div className="text-gray-400">Prize</div>
                         <div className="text-right font-medium">{formData.pricePool}</div>
@@ -422,24 +443,25 @@ export default function CampaignManagementPage() {
                     <p className="text-gray-400 text-xs mb-1">Duration</p>
                     <div className="flex items-center gap-2 text-sm font-medium">
                         <Calendar size={16} />
-                        <span>{data.duration}</span>
+                        <span>{dayjs(data.enrollStartTime).format('YYYY-MM-DD')} - {dayjs(data.completeTime).format('YYYY-MM-DD')}</span>
                     </div>
                 </div>
 
                 <div className="bg-white rounded-xl p-4 flex justify-between items-center mb-6">
                     <div className="text-center">
                         <div className="text-pink-500 flex justify-center mb-1"><Users size={18} /></div>
-                        <div className="font-bold text-lg">{data.participants}</div>
+                        <div className="font-bold text-lg">{data.maxParticipants || "∞"}</div>
                         <div className="text-xs text-gray-400">Participants</div>
                     </div>
+                    {/* Placeholder for Videos and Votes as API doesn't return them yet */}
                     <div className="text-center">
                         <div className="text-purple-500 flex justify-center mb-1"><Video size={18} /></div>
-                        <div className="font-bold text-lg">{data.videos}</div>
+                        <div className="font-bold text-lg">0</div>
                         <div className="text-xs text-gray-400">Videos</div>
                     </div>
                     <div className="text-center">
                         <div className="text-orange-500 flex justify-center mb-1"><Award size={18} /></div>
-                        <div className="font-bold text-lg">{data.votes}</div>
+                        <div className="font-bold text-lg">0</div>
                         <div className="text-xs text-gray-400">Votes</div>
                     </div>
                 </div>
@@ -496,12 +518,38 @@ export default function CampaignManagementPage() {
                         { key: '4', label: 'Past' },
                     ]}
                 />
-                <Input prefix={<Search className="text-gray-400" size={18} />} placeholder="Search by Campaign" className="!bg-[#f5f5f5] !border-none !h-12 !text-base !rounded-lg" />
+                <Input
+                    prefix={<Search className="text-gray-400" size={18} />}
+                    placeholder="Search by Campaign"
+                    className="!bg-[#f5f5f5] !border-none !h-12 !text-base !rounded-lg"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setPagination(prev => ({ ...prev, current: 1 })); // Reset to page 1 on search
+                    }}
+                />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredCampaigns.map(campaign => <CampaignCard key={campaign.id} data={campaign} />)}
+                {fetchedCampaigns.map(campaign => (
+                    <CampaignCard
+                        key={campaign.id}
+                        data={{
+                            ...campaign,
+                            status: 'Unknown', // Status not explicitly provided by API in list, using placeholders
+                            statusColor: 'text-gray-600 bg-gray-100',
+                            iconColor: 'bg-purple-100 text-purple-500' // Default icon color
+                        }}
+                    />
+                ))}
             </div>
+
+            <CustomPagination
+                current={pagination.current}
+                total={pagination.total}
+                pageSize={pagination.pageSize}
+                onChange={(page) => setPagination(prev => ({ ...prev, current: page }))}
+            />
 
             <ConfigProvider
                 theme={{
@@ -533,6 +581,7 @@ export default function CampaignManagementPage() {
                             colorBgContainer: '#2e2e48',
                             colorBorder: '#444',
                             colorTextPlaceholder: '#888',
+                            colorTextDisabled: '#666',
                         },
                         InputNumber: {
                             colorBgContainer: '#2e2e48',
@@ -630,19 +679,18 @@ export default function CampaignManagementPage() {
                                             reviewStartTime: formatDate(formValues.reviewStartTime),
                                             votingStartTime: formatDate(formValues.votingStartTime),
                                             completeTime: formatDate(formValues.completeTime),
-                                            votingEndTime: formatDate(formValues.votingEndTime),
-                                            reviewEndTime: formatDate(formValues.reviewEndTime),
+                                            // votingEndTime: formatDate(formValues.votingEndTime),
+                                            // reviewEndTime: formatDate(formValues.reviewEndTime),
                                             maxParticipants: formValues.maxParticipants,
                                             maxAgeLimit: formValues.maxAgeLimit,
                                             minAgeLimit: formValues.minAgeLimit || 18,
-                                            featured: formValues.featured || false,
-                                            requiresApproval: formValues.requiresApproval || false,
-                                            publicVoting: formValues.publicVoting || false,
+                                            // featured: formValues.featured || false,
+                                            // requiresApproval: formValues.requiresApproval || false,
+                                            // publicVoting: formValues.publicVoting || false,
                                             campaignRules: formValues.rules || [],
-                                            category: formValues.category,
+                                            // category: formValues.category,
                                         };
 
-                                        console.log("Payload before API call:", payload); // Debug log
 
                                         const res = await triggerCreate(payload, {
                                             successMsg: true,

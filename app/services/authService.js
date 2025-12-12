@@ -9,4 +9,8 @@ export const logoutUser = async () => {
   return authorizedAxiosInstance.get("/auth/sign-out");
 };
 
+export const authAdmin = async () => {
+  return authorizedAxiosInstance.get("/auth/admin/auth");
+};
+
 

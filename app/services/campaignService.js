@@ -7,3 +7,7 @@ export const uploadCampaignImage = async (data) => {
 export const createCampaign = async (data) => {
     return authorizedAxiosInstance.post("/campaign/admin/create", data);
 };
+
+export const getAllCampaigns = async (params) => {
+    return authorizedAxiosInstance.get("/campaign/admin/all", { params });
+};

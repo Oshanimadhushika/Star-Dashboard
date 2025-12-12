@@ -4,15 +4,16 @@ import React from 'react';
 import { Form, Input, Button } from 'antd';
 import { AudioOutlined, MailOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { loginUser } from '@/app/services/authService';
+import { loginUser, authAdmin } from '@/app/services/authService';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
-import { getCookie, setCookie } from '@/app/helpers/storageHelper';
+import { getCookie, setCookie, setLocalStorageData } from '@/app/helpers/storageHelper';
 
 export default function LoginPage() {
     const router = useRouter();
     const [form] = Form.useForm();
 
-    const { trigger: triggerLogin, loading } = useLazyFetch(loginUser);
+    const { trigger: triggerLogin, loading: loginLoading } = useLazyFetch(loginUser);
+    const { trigger: triggerAuth, loading: authLoading } = useLazyFetch(authAdmin);
 
     const onFinish = async (values) => {
         const response = await triggerLogin(values, {
@@ -23,7 +24,20 @@ export default function LoginPage() {
 
         if (response?.data.success) {
             setCookie('auth-token', response?.data?.data, 1);
-            router.push('/');
+
+            const authResponse = await triggerAuth(null, {
+                successMsg: false,
+                errorMsg: false
+            });
+
+
+            if (authResponse?.data?.success) {
+                const userInfo = authResponse.data.data;
+                if (userInfo) {
+                    setLocalStorageData("userData", userInfo);
+                }
+                router.push('/');
+            }
         }
     };
 
@@ -83,7 +97,7 @@ export default function LoginPage() {
                         <Button
                             htmlType="submit"
                             block
-                            loading={loading}
+                            loading={loginLoading || authLoading}
                             disabled={
                                 !form.isFieldsTouched(true) ||
                                 !!form.getFieldsError().filter(({ errors }) => errors.length).length ||

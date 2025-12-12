@@ -20,21 +20,3 @@ export const authorizedFileUploadAxiosInstance = axios.create({
 });
 
 
-
-// authorizedAxiosInstance.interceptors.request.use((config) => {
-//     const token = getCookie("auth-token");
-
-//     if (token) {
-//         config.headers["auth-token"] = token;
-//     }
-//     return config;
-// });
-
-// authorizedFileUploadAxiosInstance.interceptors.request.use((config) => {
-//     const token = getCookie("auth-token");
-
-//     if (token) {
-//         config.headers["auth-token"] = token;
-//     }
-//     return config;
-// });
