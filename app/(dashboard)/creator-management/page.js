@@ -10,7 +10,6 @@ export default function CreatorManagementPage() {
     const [searchText, setSearchText] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
 
-    // Dummy Data based on screenshot
     const dummyData = Array.from({ length: 8 }).map((_, i) => ({
         id: i + 1,
         creator: "Amazing Cover - Shape of You",

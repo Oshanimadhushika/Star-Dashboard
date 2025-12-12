@@ -18,23 +18,23 @@ export default function CampaignManagementPage() {
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState({
         title: '',
-        category: '',
+        // category: '',
         description: '',
         price: '',
         campaignImageUrl: null,
         enrollStartTime: null,
         completeTime: null,
         votingStartTime: null,
-        votingEndTime: null,
+        // votingEndTime: null,
         reviewStartTime: null,
-        reviewEndTime: null,
+        // reviewEndTime: null,
         maxParticipants: '',
         maxAgeLimit: '',
         minAgeLimit: 18,
         pricePool: '',
-        featured: false,
-        requiresApproval: false,
-        publicVoting: false,
+        // featured: false,
+        // requiresApproval: false,
+        // publicVoting: false,
         rules: [],
     });
     const [imageUrl, setImageUrl] = useState('');
@@ -453,7 +453,6 @@ export default function CampaignManagementPage() {
                         <div className="font-bold text-lg">{data.maxParticipants || "∞"}</div>
                         <div className="text-xs text-gray-400">Participants</div>
                     </div>
-                    {/* Placeholder for Videos and Votes as API doesn't return them yet */}
                     <div className="text-center">
                         <div className="text-purple-500 flex justify-center mb-1"><Video size={18} /></div>
                         <div className="font-bold text-lg">0</div>
@@ -494,7 +493,6 @@ export default function CampaignManagementPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            {/* Header */}
             <div className="flex justify-between items-start mb-2">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Campaign Management</h1>
@@ -536,9 +534,9 @@ export default function CampaignManagementPage() {
                         key={campaign.id}
                         data={{
                             ...campaign,
-                            status: 'Unknown', // Status not explicitly provided by API in list, using placeholders
+                            status: 'Unknown',
                             statusColor: 'text-gray-600 bg-gray-100',
-                            iconColor: 'bg-purple-100 text-purple-500' // Default icon color
+                            iconColor: 'bg-purple-100 text-purple-500'
                         }}
                     />
                 ))}
@@ -657,14 +655,12 @@ export default function CampaignManagementPage() {
                                 type="primary"
                                 onClick={async () => {
                                     try {
-                                        // Get all form values
-                                        // const formValues = form.getFieldsValue();
+
                                         const formValues = formData;
 
                                         console.log("formValues", formValues);
 
 
-                                        // Format date fields to ISO string
                                         const formatDate = (date) => {
                                             if (!date) return null;
                                             return dayjs(date).toISOString();
@@ -704,23 +700,23 @@ export default function CampaignManagementPage() {
                                             setImageUrl('');
                                             setFormData({
                                                 title: '',
-                                                category: '',
+                                                // category: '',
                                                 description: '',
                                                 price: '',
                                                 campaignImageUrl: null,
                                                 enrollStartTime: null,
                                                 completeTime: null,
                                                 votingStartTime: null,
-                                                votingEndTime: null,
+                                                // votingEndTime: null,
                                                 reviewStartTime: null,
-                                                reviewEndTime: null,
+                                                // reviewEndTime: null,
                                                 maxParticipants: '',
                                                 maxAgeLimit: '',
                                                 minAgeLimit: 18,
                                                 pricePool: '',
-                                                featured: false,
-                                                requiresApproval: false,
-                                                publicVoting: false,
+                                                // featured: false,
+                                                // requiresApproval: false,
+                                                // publicVoting: false,
                                                 rules: [],
                                             });
                                         }
@@ -741,11 +737,7 @@ export default function CampaignManagementPage() {
                 </Modal>
             </ConfigProvider>
 
-            {/* <style jsx global>{`
-                .custom-select .ant-select-selector { background-color: #2e2e48 !important; border-color: #444 !important; color: white !important; }
-                .custom-select .ant-select-arrow { color: white !important; }
-                .input-number-dark .ant-input-number-handler-wrap { background-color: #444 !important; }
-            `}</style> */}
+
         </div>
     );
 }

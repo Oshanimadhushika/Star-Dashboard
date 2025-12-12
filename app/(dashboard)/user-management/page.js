@@ -13,11 +13,10 @@ export default function UserManagementPage() {
     const [searchText, setSearchText] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
 
-    // Dummy Data
     const dummyData = Array.from({ length: 12 }).map((_, i) => ({
         id: i + 1,
         name: "Sarah Johnson",
-        avatar: "", // empty for default icon or placeholder url
+        avatar: "",
         subscription: i % 3 === 0 ? "Gold" : i % 3 === 1 ? "Silver" : "Platinum",
         subscriptionColor: i % 3 === 0 ? "#EAB308" : i % 3 === 1 ? "#94A3B8" : "#A855F7",
         status: i === 4 ? "Suspended" : "Active",
@@ -93,13 +92,11 @@ export default function UserManagementPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            {/* Header */}
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
                 <p className="text-slate-500">Manage platform users and their accounts</p>
             </div>
 
-            {/* Filter Tabs */}
             <div className="flex flex-col gap-4 mb-6">
                 <Tabs
                     defaultActiveKey="1"
@@ -123,14 +120,12 @@ export default function UserManagementPage() {
                 />
             </div>
 
-            {/* Table */}
             <CustomTable
                 columns={columns}
                 dataSource={dummyData}
                 loading={false}
             />
 
-            {/* Pagination */}
             <CustomPagination
                 current={currentPage}
                 total={dummyData.length * 3}
