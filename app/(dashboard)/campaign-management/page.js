@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Input, Button, Modal, Tabs, Upload, Select, DatePicker, Switch, Steps, InputNumber, message, ConfigProvider, Form, Table, Tag } from 'antd';
 import { Search, Trophy, Calendar, Users, Video, Award, Eye, Edit, Plus, Info, UploadCloud, X, Check, CheckCircle, Save } from 'lucide-react';
-import { createCampaign, uploadCampaignImage, getAllCampaigns } from '@/app/services/campaignService';
+import { createCampaign, uploadCampaignImage, getAllCampaigns, updateCampaign } from '@/app/services/campaignService';
 import CustomPagination from "@/components/CustomPagination";
 import useLazyFetch from '@/app/hooks/useLazyFetch';
 import dayjs from 'dayjs';
@@ -51,6 +51,7 @@ export default function CampaignManagementPage() {
     const { trigger: triggerCreate, loading: createLoading } = useLazyFetch(createCampaign);
     const { trigger: triggerFetch, loading: fetchLoading } = useLazyFetch(getAllCampaigns);
     const { trigger: triggerUpload, loading: uploadLoading } = useLazyFetch(uploadCampaignImage);
+    const { trigger: triggerUpdate, loading: updateLoading } = useLazyFetch(updateCampaign);
 
     const [fetchedCampaigns, setFetchedCampaigns] = useState([]);
     const [pagination, setPagination] = useState({
@@ -457,10 +458,16 @@ export default function CampaignManagementPage() {
         setSelectedCampaign(campaign);
         editForm.setFieldsValue({
             title: campaign.title,
+            description: campaign.description,
+            pricePool: campaign.pricePool,
             enrollStartTime: campaign.enrollStartTime ? dayjs(campaign.enrollStartTime) : null,
             reviewStartTime: campaign.reviewStartTime ? dayjs(campaign.reviewStartTime) : null,
             votingStartTime: campaign.votingStartTime ? dayjs(campaign.votingStartTime) : null,
             completeTime: campaign.completeTime ? dayjs(campaign.completeTime) : null,
+            maxParticipants: campaign.maxParticipants,
+            maxAgeLimit: campaign.maxAgeLimit,
+            minAgeLimit: campaign.minAgeLimit,
+            rules: campaign.campaignRules || [],
             status: campaign.status || 'Upcoming',
         });
         setIsEditDirty(false);
@@ -795,50 +802,181 @@ export default function CampaignManagementPage() {
                     footer={null}
                     styles={{ mask: { backdropFilter: 'blur(5px)' } }}
                     closeIcon={<X className="text-white" />}
+                    width={700}
                 >
-                    <Form form={editForm} layout="vertical" onValuesChange={() => setIsEditDirty(true)} onFinish={(values) => {
-                        console.log("Updated Values:", values);
-                        setIsEditModalOpen(false);
-                    }}>
-                        <Form.Item name="title" label={<span className="text-white">Campaign Title</span>} rules={[{ required: true }]}>
-                            <Input className="!bg-[#2e2e48] !border-[#444] !text-white" />
-                        </Form.Item>
+                    <Form
+                        form={editForm}
+                        layout="vertical"
+                        onValuesChange={(_, allValues) => {
+                            if (!selectedCampaign) return;
+
+                            const formatDate = (d) => d ? dayjs(d).toISOString() : null;
+                            const formatNumber = (n) => n ? Number(n) : null;
+
+                            const isChanged =
+                                allValues.title !== selectedCampaign.title ||
+                                allValues.description !== selectedCampaign.description ||
+                                formatNumber(allValues.pricePool) !== formatNumber(selectedCampaign.pricePool) ||
+                                formatNumber(allValues.maxParticipants) !== formatNumber(selectedCampaign.maxParticipants) ||
+                                formatNumber(allValues.maxAgeLimit) !== formatNumber(selectedCampaign.maxAgeLimit) ||
+                                formatNumber(allValues.minAgeLimit) !== formatNumber(selectedCampaign.minAgeLimit) ||
+                                formatDate(allValues.enrollStartTime) !== formatDate(selectedCampaign.enrollStartTime) ||
+                                formatDate(allValues.reviewStartTime) !== formatDate(selectedCampaign.reviewStartTime) ||
+                                formatDate(allValues.votingStartTime) !== formatDate(selectedCampaign.votingStartTime) ||
+                                formatDate(allValues.completeTime) !== formatDate(selectedCampaign.completeTime) ||
+                                JSON.stringify(allValues.rules || []) !== JSON.stringify(selectedCampaign.campaignRules || []) ||
+                                (allValues.status || 'Upcoming') !== (selectedCampaign.status || 'Upcoming');
+
+                            setIsEditDirty(isChanged);
+                        }}
+                        onFinish={async (values) => {
+                            try {
+                                const formatDate = (date) => date ? dayjs(date).toISOString() : null;
+
+                                const payload = {
+                                    id: selectedCampaign.id,
+                                    title: values.title,
+                                    description: values.description,
+                                    pricePool: values.pricePool,
+                                    campaignImageUrl: selectedCampaign.campaignImageUrl, // Keeping original image for now as per minimal edit fields request
+                                    enrollStartTime: formatDate(values.enrollStartTime),
+                                    reviewStartTime: formatDate(values.reviewStartTime),
+                                    votingStartTime: formatDate(values.votingStartTime),
+                                    completeTime: formatDate(values.completeTime),
+                                    maxParticipants: values.maxParticipants,
+                                    maxAgeLimit: values.maxAgeLimit,
+                                    minAgeLimit: values.minAgeLimit,
+                                    campaignRules: values.rules || []
+                                };
+
+                                const res = await triggerUpdate(payload, {
+                                    successMsg: true,
+                                    errorMsg: true
+                                });
+
+                                if (res?.data?.success) {
+                                    setIsEditModalOpen(false);
+                                    fetchCampaigns();
+                                }
+                            } catch (error) {
+                                console.error("Error updating campaign:", error);
+                            }
+                        }}
+                    >
                         <div className="grid grid-cols-2 gap-4">
-                            <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start</span>}>
+                            <Form.Item
+                                name="title"
+                                label={<span className="text-white">Campaign Title</span>}
+                                rules={[
+                                    { required: true, message: 'Please enter campaign title' },
+                                    { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' }
+                                ]}
+                            >
+                                <Input className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                            </Form.Item>
+                            <Form.Item
+                                name="pricePool"
+                                label={<span className="text-white">Price Pool</span>}
+                                rules={[{ required: true, message: 'Please enter price amount' }]}
+                            >
+                                <InputNumber
+                                    className="!w-full !bg-[#2e2e48] !border-[#444] !text-white input-number-dark"
+                                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                    parser={(value) => value?.replace(/\D/g, '')}
+                                />
+                            </Form.Item>
+                        </div>
+
+                        <Form.Item
+                            name="description"
+                            label={<span className="text-white">Description</span>}
+                            rules={[
+                                { required: true, message: 'Please enter description' },
+                                { min: 20, max: 300, message: 'Description must be between 20 and 300 characters' }
+                            ]}
+                        >
+                            <TextArea rows={3} className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                        </Form.Item>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start</span>} rules={[{ required: true, message: 'Required' }]}>
                                 <DatePicker
                                     className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                                     disabled={selectedCampaign?.enrollStartTime && !dayjs(selectedCampaign.enrollStartTime).isAfter(dayjs(), 'day')}
                                 />
                             </Form.Item>
-                            <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start</span>}>
+                            <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start</span>} rules={[{ required: true, message: 'Required' }]}>
                                 <DatePicker
                                     className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                                     disabled={selectedCampaign?.reviewStartTime && !dayjs(selectedCampaign.reviewStartTime).isAfter(dayjs(), 'day')}
                                 />
                             </Form.Item>
-                            <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start</span>}>
+                            <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start</span>} rules={[{ required: true, message: 'Required' }]}>
                                 <DatePicker
                                     className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                                     disabled={selectedCampaign?.votingStartTime && !dayjs(selectedCampaign.votingStartTime).isAfter(dayjs(), 'day')}
                                 />
                             </Form.Item>
-                            <Form.Item name="completeTime" label={<span className="text-white">End Date</span>}>
+                            <Form.Item name="completeTime" label={<span className="text-white">End Date</span>} rules={[{ required: true, message: 'Required' }]}>
                                 <DatePicker
                                     className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                                     disabled={selectedCampaign?.completeTime && !dayjs(selectedCampaign.completeTime).isAfter(dayjs(), 'day')}
                                 />
                             </Form.Item>
                         </div>
-                        <Form.Item name="status" label={<span className="text-white">Status</span>}>
-                            <Select className="!bg-[#2e2e48]" classNames={{ popup: '!bg-[#2e2e48]' }} >
-                                <Option value="Active">Active</Option>
-                                <Option value="Upcoming">Upcoming</Option>
-                                <Option value="Completed">Completed</Option>
-                            </Select>
-                        </Form.Item>
-                        <Button type="primary" htmlType="submit" disabled={!isEditDirty} className="w-full !bg-pink-600 !border-none h-10 disabled:!bg-gray-600 disabled:!text-gray-400">
-                            Save Changes
-                        </Button>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants</span>} rules={[{ required: true, message: 'Required' }]}>
+                                <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                            </Form.Item>
+                            <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age</span>}>
+                                <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                            </Form.Item>
+                            <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age</span>} rules={[{ required: true, message: 'Required' }]}>
+                                <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                            </Form.Item>
+                        </div>
+
+                        <Form.List name="rules">
+                            {(fields, { add, remove }) => (
+                                <div className="mb-4">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-white">Campaign Rules</span>
+                                        <Button type="dashed" onClick={() => add()} size="small" icon={<Plus size={14} />} className="!text-white !border-[#444] !bg-black p-2">
+                                            Add Rule
+                                        </Button>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        {fields.map((field, index) => (
+                                            <div key={field.key} className="flex gap-2">
+                                                <Form.Item
+                                                    {...field}
+                                                    noStyle
+                                                >
+                                                    <Input className="!bg-[#2e2e48] !border-[#444] !text-white" placeholder="Rule" />
+                                                </Form.Item>
+                                                <Button
+                                                    type="text"
+                                                    onClick={() => remove(field.name)}
+                                                    className="!text-red-500 hover:!bg-red-500/10"
+                                                    icon={<X size={16} />}
+                                                />
+                                            </div>
+                                        ))}
+                                        {fields.length === 0 && <div className="text-gray-500 text-sm">No rules defined</div>}
+                                    </div>
+                                </div>
+                            )}
+                        </Form.List>
+
+                        <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[#333]">
+                            <Button onClick={() => setIsEditModalOpen(false)} className="!bg-transparent !border-[#444] !text-white">
+                                Cancel
+                            </Button>
+                            <Button type="primary" htmlType="submit" loading={updateLoading} disabled={!isEditDirty} className="!bg-pink-600 !border-none px-6 shadow-lg shadow-pink-600/20">
+                                Save Changes
+                            </Button>
+                        </div>
                     </Form>
                 </Modal>
 
@@ -876,6 +1014,6 @@ export default function CampaignManagementPage() {
 
             </ConfigProvider>
 
-        </div>
+        </div >
     );
 }
