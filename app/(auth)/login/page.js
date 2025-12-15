@@ -7,8 +7,13 @@ import { useRouter } from 'next/navigation';
 import { loginUser, authAdmin } from '@/app/services/authService';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
 import { getCookie, setCookie, setLocalStorageData } from '@/app/helpers/storageHelper';
+import { useMounted } from '@/app/hooks/useMounted';
 
 export default function LoginPage() {
+    const mounted = useMounted();
+
+
+
     const router = useRouter();
     const [form] = Form.useForm();
 
@@ -41,6 +46,9 @@ export default function LoginPage() {
         }
     };
 
+    if (!mounted) {
+        return null;
+    }
     return (
         <div
             className="w-full max-w-[400px] p-8 rounded-2xl border border-white/20 shadow-xl backdrop-blur-md bg-white/10 "

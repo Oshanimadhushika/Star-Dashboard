@@ -459,7 +459,7 @@ export default function CampaignManagementPage() {
             title: campaign.title,
             enrollStartTime: campaign.enrollStartTime ? dayjs(campaign.enrollStartTime) : null,
             completeTime: campaign.completeTime ? dayjs(campaign.completeTime) : null,
-            status: campaign.status || 'Active',
+            status: campaign.status || 'Upcoming',
         });
         setIsEditDirty(false);
         setIsEditModalOpen(true);
