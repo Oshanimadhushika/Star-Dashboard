@@ -458,6 +458,8 @@ export default function CampaignManagementPage() {
         editForm.setFieldsValue({
             title: campaign.title,
             enrollStartTime: campaign.enrollStartTime ? dayjs(campaign.enrollStartTime) : null,
+            reviewStartTime: campaign.reviewStartTime ? dayjs(campaign.reviewStartTime) : null,
+            votingStartTime: campaign.votingStartTime ? dayjs(campaign.votingStartTime) : null,
             completeTime: campaign.completeTime ? dayjs(campaign.completeTime) : null,
             status: campaign.status || 'Upcoming',
         });
@@ -771,7 +773,6 @@ export default function CampaignManagementPage() {
                                         }
                                     } catch (error) {
                                         console.error("Error creating campaign:", error);
-                                        message.error("Failed to create campaign. Please check all fields.");
                                     }
                                 }}
 
@@ -797,7 +798,6 @@ export default function CampaignManagementPage() {
                 >
                     <Form form={editForm} layout="vertical" onValuesChange={() => setIsEditDirty(true)} onFinish={(values) => {
                         console.log("Updated Values:", values);
-                        message.success("Campaign updated successfully (Mock)");
                         setIsEditModalOpen(false);
                     }}>
                         <Form.Item name="title" label={<span className="text-white">Campaign Title</span>} rules={[{ required: true }]}>
@@ -805,10 +805,28 @@ export default function CampaignManagementPage() {
                         </Form.Item>
                         <div className="grid grid-cols-2 gap-4">
                             <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start</span>}>
-                                <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                                <DatePicker
+                                    className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                                    disabled={selectedCampaign?.enrollStartTime && !dayjs(selectedCampaign.enrollStartTime).isAfter(dayjs(), 'day')}
+                                />
+                            </Form.Item>
+                            <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start</span>}>
+                                <DatePicker
+                                    className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                                    disabled={selectedCampaign?.reviewStartTime && !dayjs(selectedCampaign.reviewStartTime).isAfter(dayjs(), 'day')}
+                                />
+                            </Form.Item>
+                            <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start</span>}>
+                                <DatePicker
+                                    className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                                    disabled={selectedCampaign?.votingStartTime && !dayjs(selectedCampaign.votingStartTime).isAfter(dayjs(), 'day')}
+                                />
                             </Form.Item>
                             <Form.Item name="completeTime" label={<span className="text-white">End Date</span>}>
-                                <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                                <DatePicker
+                                    className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                                    disabled={selectedCampaign?.completeTime && !dayjs(selectedCampaign.completeTime).isAfter(dayjs(), 'day')}
+                                />
                             </Form.Item>
                         </div>
                         <Form.Item name="status" label={<span className="text-white">Status</span>}>
@@ -835,14 +853,14 @@ export default function CampaignManagementPage() {
                 >
                     <Table
                         dataSource={[
-                            { key: 1, rank: 1, name: 'Sarah J', song: 'Shape of You', votes: 1240 },
-                            { key: 2, rank: 2, name: 'Mike T', song: 'Perfect', votes: 980 },
-                            { key: 3, rank: 3, name: 'Jessica L', song: 'Halo', votes: 850 },
+                            { key: 1, rank: 1, name: 'Sarah J', title: 'Shape of You', votes: 1240 },
+                            { key: 2, rank: 2, name: 'Mike T', title: 'Perfect', votes: 980 },
+                            { key: 3, rank: 3, name: 'Jessica L', title: 'Halo', votes: 850 },
                         ]}
                         columns={[
                             { title: 'Rank', dataIndex: 'rank', key: 'rank', render: (r) => <div className="w-6 h-6 rounded-full bg-yellow-500 text-black font-bold flex items-center justify-center">{r}</div> },
                             { title: 'Participant', dataIndex: 'name', key: 'name', render: (t) => <span className="text-white font-medium">{t}</span> },
-                            { title: 'Song', dataIndex: 'song', key: 'song', render: (t) => <span className="text-gray-400">{t}</span> },
+                            { title: 'Title', dataIndex: 'title', key: 'title', render: (t) => <span className="text-gray-400">{t}</span> },
                             { title: 'Votes', dataIndex: 'votes', key: 'votes', render: (v) => <span className="text-pink-500 font-bold">{v}</span> },
                         ]}
                         pagination={false}
