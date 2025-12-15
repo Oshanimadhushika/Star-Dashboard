@@ -1,57 +1,25 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Input, Button, Modal, Tabs, Upload, Select, DatePicker, Switch, Steps, InputNumber, message, ConfigProvider, Form, Table, Tag } from 'antd';
-import { Search, Trophy, Calendar, Users, Video, Award, Eye, Edit, Plus, Info, UploadCloud, X, Check, CheckCircle, Save } from 'lucide-react';
-import { createCampaign, uploadCampaignImage, getAllCampaigns, updateCampaign } from '@/app/services/campaignService';
+import { Input, Button, Tabs, ConfigProvider } from 'antd';
+import { Search, Trophy, Calendar, Users, Video, Award, Eye, Plus } from 'lucide-react';
+import { getAllCampaigns } from '@/app/services/campaignService';
 import CustomPagination from "@/components/CustomPagination";
 import useLazyFetch from '@/app/hooks/useLazyFetch';
+import useDebounce from '@/app/hooks/useDebounce';
 import dayjs from 'dayjs';
-
-const { TextArea } = Input;
-const { Option } = Select;
+import CreateCampaign from '@/components/campaign/CreateCampaign';
+import EditCampaign from '@/components/campaign/EditCampaign';
+import ViewCampaign from '@/components/campaign/ViewCampaign';
 
 export default function CampaignManagementPage() {
-    const [form] = Form.useForm();
-    const [editForm] = Form.useForm();
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
-    const [isEditDirty, setIsEditDirty] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);
 
     const [selectedCampaign, setSelectedCampaign] = useState(null);
 
-
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        price: '',
-        campaignImageUrl: null,
-        enrollStartTime: null,
-        completeTime: null,
-        votingStartTime: null,
-        // votingEndTime: null,
-        reviewStartTime: null,
-        // reviewEndTime: null,
-        maxParticipants: '',
-        maxAgeLimit: '',
-        minAgeLimit: 18,
-        pricePool: '',
-        // featured: false,
-        // requiresApproval: false,
-        // publicVoting: false,
-        rules: [],
-    });
-    const [imageUrl, setImageUrl] = useState('');
-    const [isStepValid, setIsStepValid] = useState(false);
-
-
-    const { trigger: triggerCreate, loading: createLoading } = useLazyFetch(createCampaign);
-    const { trigger: triggerFetch, loading: fetchLoading } = useLazyFetch(getAllCampaigns);
-    const { trigger: triggerUpload, loading: uploadLoading } = useLazyFetch(uploadCampaignImage);
-    const { trigger: triggerUpdate, loading: updateLoading } = useLazyFetch(updateCampaign);
+    const { trigger: triggerFetch } = useLazyFetch(getAllCampaigns);
 
     const [fetchedCampaigns, setFetchedCampaigns] = useState([]);
     const [pagination, setPagination] = useState({
@@ -60,9 +28,8 @@ export default function CampaignManagementPage() {
         total: 0
     });
     const [searchQuery, setSearchQuery] = useState('');
-    const [newRule, setNewRule] = useState('');
+    const debouncedSearchQuery = useDebounce(searchQuery, 500);
     const [activeTab, setActiveTab] = useState('1');
-
 
     const fetchCampaigns = async () => {
         let status = '';
@@ -76,7 +43,7 @@ export default function CampaignManagementPage() {
         const params = {
             page: pagination.current,
             perPage: pagination.pageSize,
-            search: searchQuery,
+            search: debouncedSearchQuery,
             campaignStatus: status
         };
 
@@ -85,392 +52,19 @@ export default function CampaignManagementPage() {
             const { data, total, page, perPage } = res.data.data;
 
             setFetchedCampaigns(data);
-            setPagination(prev => ({ ...prev, current: page, total, pageSize: perPage }));
+            setPagination(prev => ({ ...prev, current: page, total: total || 0, pageSize: perPage || 10 }));
         }
     };
 
     useEffect(() => {
         fetchCampaigns();
-    }, [pagination.current, pagination.pageSize, searchQuery, activeTab]);
-
+    }, [pagination.current, pagination.pageSize, debouncedSearchQuery, activeTab]);
 
     const showModal = () => setIsModalOpen(true);
-    const handleCancel = () => { setIsModalOpen(false); setCurrentStep(0); };
-
-
-
-
-    const stepFields = {
-        0: ["title", "description", "pricePool"],
-        1: [
-            "enrollStartTime", "completeTime", "votingStartTime", // "votingEndTime",
-            "reviewStartTime", // "reviewEndTime", 
-            "maxParticipants", "maxAgeLimit"
-        ],
-        2: [],
-        3: []
-    };
-
-    const validateCurrentStep = () => {
-        if (!isModalOpen) return;
-        const fieldsToValidate = stepFields[currentStep];
-
-        const errors = form.getFieldsError(fieldsToValidate);
-        const hasError = errors.some((field) => field.errors.length > 0);
-
-        const values = form.getFieldsValue(fieldsToValidate);
-        const hasEmptyFields = fieldsToValidate.some(field => {
-            const value = values[field];
-            return value === undefined || value === null || value === '';
-        });
-
-
-        setIsStepValid(!hasError && !hasEmptyFields);
-    };
-
-    useEffect(() => {
-        validateCurrentStep();
-    }, [currentStep, form]);
-
-    useEffect(() => {
-        if (isModalOpen) {
-            form.setFieldsValue(formData);
-        }
-    }, [currentStep, form, isModalOpen]);
-
-
-    const onFormValuesChange = (allValues) => {
-        setFormData(prev => ({ ...prev, ...allValues }));
-        validateCurrentStep();
-    };
-
-
-    const handleNext = async () => {
-        try {
-            await form.validateFields(stepFields[currentStep]);
-            setCurrentStep((prev) => prev + 1);
-        } catch {
-
-        }
-    };
-
-
-    const handleBack = () => setCurrentStep(prev => prev - 1);
-
-    const handleAddRule = () => {
-        if (newRule.trim()) {
-            const currentRules = form.getFieldValue('rules') || [];
-            const updatedRules = [...currentRules, newRule];
-            form.setFieldsValue({ rules: updatedRules });
-            setFormData({ ...formData, rules: updatedRules });
-            setNewRule('');
-        }
-    };
-
-    const handleRemoveRule = (index) => {
-        const currentRules = form.getFieldValue('rules') || [];
-        const updatedRules = [...currentRules];
-        updatedRules.splice(index, 1);
-        form.setFieldsValue({ rules: updatedRules });
-        setFormData({ ...formData, rules: updatedRules });
-    };
-
-
-
-    const steps = [
-        {
-            title: 'Basic Information',
-            content: (
-                <div className="flex flex-col gap-4">
-                    <Form.Item
-                        name="title"
-                        label={<span className="text-white">Campaign Title *</span>}
-                        rules={[
-                            { required: true, message: 'Please enter campaign title' },
-                            { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' }
-                        ]}
-                    >
-                        <Input
-
-                            placeholder="Enter Campaign Title"
-                            className="!bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500"
-                        />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="description"
-                        label={<span className="text-white">Description *</span>}
-                        rules={[
-                            { required: true, message: 'Please enter description' },
-                            { min: 20, max: 300, message: 'Description must be between 20 and 300 characters' }
-                        ]}
-                    >
-                        <TextArea
-                            rows={3}
-                            placeholder="Description"
-                            className="!bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500"
-                        />
-                    </Form.Item>
-                    <Form.Item
-                        name="pricePool"
-                        label={<span className="text-white">Price amount *</span>}
-                        rules={[{ required: true, message: 'Please enter price amount' }]}
-                    >
-                        <InputNumber
-                            placeholder="Price"
-                            className="!w-full !bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500 input-number-dark"
-                            min={0}
-
-                            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                            parser={(value) => value?.replace(/\D/g, '')}
-                            onKeyPress={(event) => {
-                                if (!/[0-9]/.test(event.key)) {
-                                    event.preventDefault();
-                                }
-                            }}
-                        />
-                    </Form.Item>
-                    <Form.Item
-                        name="campaignImageUrl"
-                        rules={[{ required: false, message: 'Please upload an image' }]}
-                        style={{ display: 'none' }}
-                    >
-                        <Input />
-                    </Form.Item>
-
-                    <Form.Item label={<span className="text-white">Campaign image(Optional)</span>}>
-                        <Upload.Dragger
-                            className="!bg-[#2e2e48] !border-[#444] !border-dashed hover:!border-purple-500"
-                            accept="image/*"
-                            showUploadList={true}
-                            beforeUpload={async (file) => {
-                                try {
-                                    const imgForm = new FormData();
-                                    imgForm.append("image", file);
-
-                                    const res = await triggerUpload(imgForm, { successMsg: true, errorMsg: true });
-
-                                    if (res?.data?.success) {
-
-                                        const url = res.data.data.campaignImageUrl;
-
-                                        setImageUrl(url);
-
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            campaignImageUrl: url,
-                                        }));
-
-                                        form.setFieldValue("campaignImageUrl", url);
-                                        onFormValuesChange({}, { ...form.getFieldsValue(), campaignImageUrl: url });
-                                    }
-                                } catch (err) {
-                                    console.error("Upload failed", err);
-                                }
-
-                                return false;
-                            }}
-                        >
-                            <>
-                                <p className="ant-upload-drag-icon">
-                                    <UploadCloud className="text-gray-400 mx-auto" />
-                                </p>
-                                <p className="text-gray-400">Click or drag file to upload</p>
-                            </>
-                        </Upload.Dragger>
-                    </Form.Item>
-                    {imageUrl && (
-                        <div className="mt-3">
-                            <img
-                                src={imageUrl}
-                                alt="Uploaded preview"
-                                className="w-full h-40 object-cover rounded-md border border-[#444]"
-                            />
-                        </div>
-                    )}
-                </div >
-            )
-        },
-        {
-            title: 'Campaign Timeline',
-            content: (
-                <div className="flex flex-col gap-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker
-                                className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
-                                disabledDate={(current) => {
-                                    return current && current < dayjs().startOf('day');
-                                }}
-                            />
-                        </Form.Item>
-                        <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start Date*</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker
-                                className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
-                                disabledDate={(current) => {
-                                    const enrollStart = form.getFieldValue('enrollStartTime');
-                                    if (!enrollStart) return current && current < dayjs().startOf('day');
-                                    return current && current < dayjs(enrollStart).endOf('day');
-                                }}
-                            />
-                        </Form.Item>
-                        <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker
-                                className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
-                                disabledDate={(current) => {
-                                    const reviewStart = form.getFieldValue('reviewStartTime');
-                                    if (!reviewStart) return current && current < dayjs().startOf('day');
-                                    return current && current < dayjs(reviewStart).endOf('day');
-                                }}
-                            />
-                        </Form.Item>
-                        <Form.Item name="completeTime" label={<span className="text-white">Complete Date *</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker
-                                className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
-                                disabledDate={(current) => {
-                                    const votingStart = form.getFieldValue('votingStartTime');
-                                    if (!votingStart) return false;
-                                    return current && current <= dayjs(votingStart).endOf('day');
-                                }}
-                            />
-                        </Form.Item>
-                        {/* <Form.Item name="votingEndTime" label={<span className="text-white">Voting End Date *</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </Form.Item> */}
-                        {/* <Form.Item name="reviewEndTime" label={<span className="text-white">Review End *</span>} rules={[{ required: true, message: 'Required' }]}>
-                            <DatePicker className="w-full !bg-[#2e2e48] !border-[#444] !text-white" />
-                        </Form.Item> */}
-                    </div>
-
-                    <div>
-                        <h4 className="text-white font-semibold mb-3">Campaign Settings</h4>
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants *</span>} rules={[{ required: true, message: 'Required' }]}>
-                                <Input placeholder="Leave empty for unlimited" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
-                            </Form.Item>
-                            <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age Restriction *</span>} rules={[{ required: true, message: 'Required' }]}>
-                                <Input placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
-                            </Form.Item>
-                        </div>
-
-                        {/* <div className="flex flex-col gap-3">
-                            <Form.Item name="featured" valuePropName="checked">
-                                <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
-                                    <div>
-                                        <div className="text-white font-medium">Featured Campaign</div>
-                                        <div className="text-gray-400 text-xs">Show in featured section</div>
-                                    </div>
-                                    <Switch />
-                                </div>
-                            </Form.Item>
-                            <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
-                                <div>
-                                    <div className="text-white font-medium">Requires Approval</div>
-                                    <div className="text-gray-400 text-xs">Manually approve participants before they can compete</div>
-                                </div>
-                                <Form.Item name="requiresApproval" valuePropName="checked" noStyle><Switch /></Form.Item>
-                            </div>
-                            <div className="bg-[#2e2e48] p-3 rounded-lg flex justify-between items-center">
-                                <div>
-                                    <div className="text-white font-medium">Public Voting</div>
-                                    <div className="text-gray-400 text-xs">Allow Public to vote on submission</div>
-                                </div>
-                                <Form.Item name="publicVoting" valuePropName="checked" noStyle><Switch /></Form.Item>
-                            </div>
-                        </div> */}
-                    </div>
-                </div>
-            )
-        },
-        {
-            title: 'Rules',
-            content: (
-                <div>
-                    <label className="block text-white mb-2">Campaign Rules</label>
-                    <div className="flex flex-col gap-3 mb-4">
-                        {formData.rules.map((rule, index) => (
-                            <div key={index} className="flex items-center gap-2 bg-[#2e2e48] p-3 rounded-lg border border-[#444]">
-                                <div className="w-6 h-6 rounded-full bg-[#5b43d6] flex items-center justify-center text-white text-xs font-bold shrink-0">{index + 1}</div>
-                                <span className="text-white flex-1">{rule}</span>
-                                <button onClick={() => handleRemoveRule(index)} className="text-red-500 hover:text-red-400"><X size={16} /></button>
-                            </div>
-                        ))}
-                        {formData.rules.length === 0 && <div className="text-gray-500 text-center py-4">No rules added yet</div>}
-                    </div>
-
-                    <div className="flex gap-2 mb-4">
-                        <Input
-                            value={newRule}
-                            onChange={(e) => setNewRule(e.target.value)}
-                            placeholder="Type a rule..."
-                            className="!bg-[#2e2e48] !border-[#444] !text-white"
-                            onPressEnter={handleAddRule}
-                        />
-                    </div>
-                    <Button type="primary" block onClick={handleAddRule} className="!bg-[#5b43d6] !h-10">+ Add Rule</Button>
-                </div>
-            )
-        },
-        {
-            title: 'Review',
-            content: (
-                <div className="text-white">
-                    <h3 className="text-lg font-bold mb-4">Review Your Campaign</h3>
-
-                    <div className="grid grid-cols-2 gap-y-4 text-sm mb-6">
-                        <div className="text-gray-400">Title</div>
-                        <div className="text-right font-medium">{formData.title}</div>
-
-
-
-                        <div className="text-gray-400">Prize</div>
-                        <div className="text-right font-medium">{formData.pricePool}</div>
-                    </div>
-
-                    <div className="mb-6">
-                        <h4 className="font-semibold mb-2">Schedule & Settings</h4>
-                        <div className="grid grid-cols-2 gap-y-2 text-sm">
-                            <div className="text-gray-400">Campaign Start - End</div>
-                            <div className="text-right">
-                                {formData.enrollStartTime ? dayjs(formData.enrollStartTime).format('YYYY-MM-DD') : 'Not set'} -
-                                {formData.completeTime ? dayjs(formData.completeTime).format('YYYY-MM-DD') : 'Not set'}
-                            </div>                            <div className="text-gray-400">Voting Start - End</div>
-                            <div className="text-right">
-                                {formData.votingStartTime ? dayjs(formData.votingStartTime).format('YYYY-MM-DD') : 'Not set'} -
-                                {formData.votingEndTime ? dayjs(formData.votingEndTime).format('YYYY-MM-DD') : 'Not set'}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 className="font-semibold mb-2">Rules({formData.rules.length})</h4>
-                        <ul className="list-decimal list-inside text-gray-300 space-y-1">
-                            {formData.rules.map((rule, i) => <li key={i}>{rule}</li>)}
-                            {formData.rules.length === 0 && <li>No rules defined</li>}
-                        </ul>
-                    </div>
-                </div>
-            )
-        }
-    ];
+    const handleCancel = () => setIsModalOpen(false);
 
     const handleEdit = (campaign) => {
         setSelectedCampaign(campaign);
-        editForm.setFieldsValue({
-            title: campaign.title,
-            description: campaign.description,
-            pricePool: campaign.pricePool,
-            enrollStartTime: campaign.enrollStartTime ? dayjs(campaign.enrollStartTime) : null,
-            reviewStartTime: campaign.reviewStartTime ? dayjs(campaign.reviewStartTime) : null,
-            votingStartTime: campaign.votingStartTime ? dayjs(campaign.votingStartTime) : null,
-            completeTime: campaign.completeTime ? dayjs(campaign.completeTime) : null,
-            maxParticipants: campaign.maxParticipants,
-            maxAgeLimit: campaign.maxAgeLimit,
-            minAgeLimit: campaign.minAgeLimit,
-            rules: campaign.campaignRules || [],
-            status: campaign.status || 'Upcoming',
-        });
-        setIsEditDirty(false);
         setIsEditModalOpen(true);
     };
 
@@ -484,7 +78,6 @@ export default function CampaignManagementPage() {
             <div>
                 <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-3">
-                        {/* Use img tag for campaign image if available, else generic icon */}
                         {data.campaignImageUrl ? (
                             <img src={data.campaignImageUrl} alt={data.title} className="w-12 h-12 rounded-lg object-cover" />
                         ) : (
@@ -575,7 +168,7 @@ export default function CampaignManagementPage() {
                     value={searchQuery}
                     onChange={(e) => {
                         setSearchQuery(e.target.value);
-                        setPagination(prev => ({ ...prev, current: 1 })); // Reset to page 1 on search
+                        setPagination(prev => ({ ...prev, current: 1 }));
                     }}
                 />
             </div>
@@ -648,372 +241,25 @@ export default function CampaignManagementPage() {
                     }
                 }}
             >
-                <Modal
-                    title={<div className="text-white flex items-center gap-2"><Trophy size={18} className="text-white" /> Create Campaign</div>}
+                <CreateCampaign
                     open={isModalOpen}
                     onCancel={handleCancel}
-                    footer={null}
-                    width={600}
-                    styles={{
-                        mask: { backdropFilter: 'blur(5px)' }
-                    }}
-                    closeIcon={<X className="text-white" />}
-                >
-                    <div className="mb-6 mt-5 w-1/2 mx-auto justify-center items-center">
-                        <Steps
-                            current={currentStep}
-                            size="small"
-                            className="custom-steps "
-                            items={steps.map((_, i) => ({
-                                title: '',
-                                icon: i === currentStep ?
-                                    <div className="!w-10 !h-10 !min-w-[40px] !min-h-[40px] rounded-full bg-transparent border-2 border-purple-500 text-purple-500 flex items-center justify-center"><Edit size={16} /></div> :
-                                    (i < currentStep ? <CheckCircle size={32} className="text-green-500" /> : <div className="!w-8 !h-8 !min-w-[32px] !min-h-[32px] rounded-full bg-[#2e2e48] flex items-center justify-center text-gray-500"><Check size={14} /></div>)
-                            }))}
-                        />
-                    </div>
+                    onSuccess={fetchCampaigns}
+                />
 
-                    <div className="bg-black text-white px-1 py-2 rounded-md mb-6 text-center font-medium">
-                        Step {currentStep + 1}: {steps[currentStep].title}
-                    </div>
-
-                    <div className="min-h-[300px]">
-                        <Form
-                            form={form}
-                            layout="vertical"
-                            onValuesChange={onFormValuesChange}
-                            initialValues={{
-                                minAgeLimit: 18,
-                            }}
-                            requiredMark={false}
-                        >
-                            {steps[currentStep].content}
-                        </Form>
-                    </div>
-
-                    <div className="flex gap-4 mt-8 pt-4 border-t border-[#333]">
-                        {currentStep > 0 && (
-                            <Button
-                                onClick={handleBack}
-                                className="flex-1 !bg-black !border-[#444] !text-white !h-11 font-medium hover:!border-gray-500"
-                            >
-                                Back
-                            </Button>
-                        )}
-                        {currentStep < steps.length - 1 ? (
-                            <Button
-                                type="primary"
-                                onClick={handleNext}
-                                disabled={!isStepValid}
-                                className="flex-1 !bg-[#0000aa] !border-none !h-11 font-medium hover:!bg-[#0000cc] disabled:!bg-gray-600 disabled:!text-gray-400"
-                            >
-                                Next
-                            </Button>
-                        ) : (
-                            <Button
-                                type="primary"
-                                onClick={async () => {
-                                    try {
-
-                                        const formValues = formData;
-
-                                        console.log("formValues", formValues);
-
-
-                                        const formatDate = (date) => {
-                                            if (!date) return null;
-                                            return dayjs(date).toISOString();
-                                        };
-
-                                        const payload = {
-                                            title: formValues.title,
-                                            description: formValues.description,
-                                            pricePool: formValues.pricePool,
-                                            campaignImageUrl: formValues.campaignImageUrl || imageUrl,
-                                            enrollStartTime: formatDate(formValues.enrollStartTime),
-                                            reviewStartTime: formatDate(formValues.reviewStartTime),
-                                            votingStartTime: formatDate(formValues.votingStartTime),
-                                            completeTime: formatDate(formValues.completeTime),
-                                            // votingEndTime: formatDate(formValues.votingEndTime),
-                                            // reviewEndTime: formatDate(formValues.reviewEndTime),
-                                            maxParticipants: formValues.maxParticipants,
-                                            maxAgeLimit: formValues.maxAgeLimit,
-                                            minAgeLimit: formValues.minAgeLimit || 18,
-                                            // featured: formValues.featured || false,
-                                            // requiresApproval: formValues.requiresApproval || false,
-                                            // publicVoting: formValues.publicVoting || false,
-                                            campaignRules: formValues.rules || [],
-                                        };
-
-
-                                        const res = await triggerCreate(payload, {
-                                            successMsg: true,
-                                            errorMsg: true
-                                        });
-
-                                        if (res?.data?.success) {
-                                            setIsModalOpen(false);
-                                            setCurrentStep(0);
-                                            form.resetFields();
-                                            setImageUrl('');
-                                            setFormData({
-                                                title: '',
-                                                description: '',
-                                                price: '',
-                                                campaignImageUrl: null,
-                                                enrollStartTime: null,
-                                                completeTime: null,
-                                                votingStartTime: null,
-                                                // votingEndTime: null,
-                                                reviewStartTime: null,
-                                                // reviewEndTime: null,
-                                                maxParticipants: '',
-                                                maxAgeLimit: '',
-                                                minAgeLimit: 18,
-                                                pricePool: '',
-                                                // featured: false,
-                                                // requiresApproval: false,
-                                                // publicVoting: false,
-                                                rules: [],
-                                            });
-                                            fetchCampaigns();
-                                        }
-                                    } catch (error) {
-                                        console.error("Error creating campaign:", error);
-                                    }
-                                }}
-
-
-                                loading={createLoading}
-                                className="flex-1 !bg-[#0000aa] !border-none !h-11 font-medium hover:!bg-[#0000cc]"
-                            >
-                                Done
-                            </Button>
-                        )}
-                    </div>
-                </Modal>
-
-
-
-                <Modal
-                    title={<div className="text-white flex items-center gap-2"><Edit size={18} /> Edit Campaign</div>}
+                <EditCampaign
                     open={isEditModalOpen}
                     onCancel={() => setIsEditModalOpen(false)}
-                    footer={null}
-                    styles={{ mask: { backdropFilter: 'blur(5px)' } }}
-                    closeIcon={<X className="text-white" />}
-                    width={700}
-                >
-                    <Form
-                        form={editForm}
-                        layout="vertical"
-                        onValuesChange={(_, allValues) => {
-                            if (!selectedCampaign) return;
+                    onSuccess={fetchCampaigns}
+                    campaign={selectedCampaign}
+                />
 
-                            const formatDate = (d) => d ? dayjs(d).toISOString() : null;
-                            const formatNumber = (n) => n ? Number(n) : null;
-
-                            const isChanged =
-                                allValues.title !== selectedCampaign.title ||
-                                allValues.description !== selectedCampaign.description ||
-                                formatNumber(allValues.pricePool) !== formatNumber(selectedCampaign.pricePool) ||
-                                formatNumber(allValues.maxParticipants) !== formatNumber(selectedCampaign.maxParticipants) ||
-                                formatNumber(allValues.maxAgeLimit) !== formatNumber(selectedCampaign.maxAgeLimit) ||
-                                formatNumber(allValues.minAgeLimit) !== formatNumber(selectedCampaign.minAgeLimit) ||
-                                formatDate(allValues.enrollStartTime) !== formatDate(selectedCampaign.enrollStartTime) ||
-                                formatDate(allValues.reviewStartTime) !== formatDate(selectedCampaign.reviewStartTime) ||
-                                formatDate(allValues.votingStartTime) !== formatDate(selectedCampaign.votingStartTime) ||
-                                formatDate(allValues.completeTime) !== formatDate(selectedCampaign.completeTime) ||
-                                JSON.stringify(allValues.rules || []) !== JSON.stringify(selectedCampaign.campaignRules || []) ||
-                                (allValues.status || 'Upcoming') !== (selectedCampaign.status || 'Upcoming');
-
-                            setIsEditDirty(isChanged);
-                        }}
-                        onFinish={async (values) => {
-                            try {
-                                const formatDate = (date) => date ? dayjs(date).toISOString() : null;
-
-                                const payload = {
-                                    id: selectedCampaign.id,
-                                    title: values.title,
-                                    description: values.description,
-                                    pricePool: values.pricePool,
-                                    campaignImageUrl: selectedCampaign.campaignImageUrl, // Keeping original image for now as per minimal edit fields request
-                                    enrollStartTime: formatDate(values.enrollStartTime),
-                                    reviewStartTime: formatDate(values.reviewStartTime),
-                                    votingStartTime: formatDate(values.votingStartTime),
-                                    completeTime: formatDate(values.completeTime),
-                                    maxParticipants: values.maxParticipants,
-                                    maxAgeLimit: values.maxAgeLimit,
-                                    minAgeLimit: values.minAgeLimit,
-                                    campaignRules: values.rules || []
-                                };
-
-                                const res = await triggerUpdate(payload, {
-                                    successMsg: true,
-                                    errorMsg: true
-                                });
-
-                                if (res?.data?.success) {
-                                    setIsEditModalOpen(false);
-                                    fetchCampaigns();
-                                }
-                            } catch (error) {
-                                console.error("Error updating campaign:", error);
-                            }
-                        }}
-                    >
-                        <div className="grid grid-cols-2 gap-4">
-                            <Form.Item
-                                name="title"
-                                label={<span className="text-white">Campaign Title</span>}
-                                rules={[
-                                    { required: true, message: 'Please enter campaign title' },
-                                    { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' }
-                                ]}
-                            >
-                                <Input className="!bg-[#2e2e48] !border-[#444] !text-white" />
-                            </Form.Item>
-                            <Form.Item
-                                name="pricePool"
-                                label={<span className="text-white">Price Pool</span>}
-                                rules={[{ required: true, message: 'Please enter price amount' }]}
-                            >
-                                <InputNumber
-                                    className="!w-full !bg-[#2e2e48] !border-[#444] !text-white input-number-dark"
-                                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                    parser={(value) => value?.replace(/\D/g, '')}
-                                />
-                            </Form.Item>
-                        </div>
-
-                        <Form.Item
-                            name="description"
-                            label={<span className="text-white">Description</span>}
-                            rules={[
-                                { required: true, message: 'Please enter description' },
-                                { min: 20, max: 300, message: 'Description must be between 20 and 300 characters' }
-                            ]}
-                        >
-                            <TextArea rows={3} className="!bg-[#2e2e48] !border-[#444] !text-white" />
-                        </Form.Item>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start</span>} rules={[{ required: true, message: 'Required' }]}>
-                                <DatePicker
-                                    className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
-                                    disabled={selectedCampaign?.enrollStartTime && !dayjs(selectedCampaign.enrollStartTime).isAfter(dayjs(), 'day')}
-                                />
-                            </Form.Item>
-                            <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start</span>} rules={[{ required: true, message: 'Required' }]}>
-                                <DatePicker
-                                    className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
-                                    disabled={selectedCampaign?.reviewStartTime && !dayjs(selectedCampaign.reviewStartTime).isAfter(dayjs(), 'day')}
-                                />
-                            </Form.Item>
-                            <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start</span>} rules={[{ required: true, message: 'Required' }]}>
-                                <DatePicker
-                                    className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
-                                    disabled={selectedCampaign?.votingStartTime && !dayjs(selectedCampaign.votingStartTime).isAfter(dayjs(), 'day')}
-                                />
-                            </Form.Item>
-                            <Form.Item name="completeTime" label={<span className="text-white">End Date</span>} rules={[{ required: true, message: 'Required' }]}>
-                                <DatePicker
-                                    className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
-                                    disabled={selectedCampaign?.completeTime && !dayjs(selectedCampaign.completeTime).isAfter(dayjs(), 'day')}
-                                />
-                            </Form.Item>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4">
-                            <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants</span>} rules={[{ required: true, message: 'Required' }]}>
-                                <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
-                            </Form.Item>
-                            <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age</span>}>
-                                <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
-                            </Form.Item>
-                            <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age</span>} rules={[{ required: true, message: 'Required' }]}>
-                                <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
-                            </Form.Item>
-                        </div>
-
-                        <Form.List name="rules">
-                            {(fields, { add, remove }) => (
-                                <div className="mb-4">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-white">Campaign Rules</span>
-                                        <Button type="dashed" onClick={() => add()} size="small" icon={<Plus size={14} />} className="!text-white !border-[#444] !bg-black p-2">
-                                            Add Rule
-                                        </Button>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        {fields.map((field, index) => (
-                                            <div key={field.key} className="flex gap-2">
-                                                <Form.Item
-                                                    {...field}
-                                                    noStyle
-                                                >
-                                                    <Input className="!bg-[#2e2e48] !border-[#444] !text-white" placeholder="Rule" />
-                                                </Form.Item>
-                                                <Button
-                                                    type="text"
-                                                    onClick={() => remove(field.name)}
-                                                    className="!text-red-500 hover:!bg-red-500/10"
-                                                    icon={<X size={16} />}
-                                                />
-                                            </div>
-                                        ))}
-                                        {fields.length === 0 && <div className="text-gray-500 text-sm">No rules defined</div>}
-                                    </div>
-                                </div>
-                            )}
-                        </Form.List>
-
-                        <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[#333]">
-                            <Button onClick={() => setIsEditModalOpen(false)} className="!bg-transparent !border-[#444] !text-white">
-                                Cancel
-                            </Button>
-                            <Button type="primary" htmlType="submit" loading={updateLoading} disabled={!isEditDirty} className="!bg-pink-600 !border-none px-6 shadow-lg shadow-pink-600/20">
-                                Save Changes
-                            </Button>
-                        </div>
-                    </Form>
-                </Modal>
-
-                <Modal
-                    title={<div className="text-white flex items-center gap-2"><Trophy size={18} /> {selectedCampaign?.title} - Leaderboard</div>}
+                <ViewCampaign
                     open={isLeaderboardOpen}
                     onCancel={() => setIsLeaderboardOpen(false)}
-                    footer={null}
-                    width={800}
-                    styles={{ mask: { backdropFilter: 'blur(5px)' } }}
-                    closeIcon={<X className="text-white" />}
-                >
-                    <Table
-                        dataSource={[
-                            { key: 1, rank: 1, name: 'Sarah J', title: 'Shape of You', votes: 1240 },
-                            { key: 2, rank: 2, name: 'Mike T', title: 'Perfect', votes: 980 },
-                            { key: 3, rank: 3, name: 'Jessica L', title: 'Halo', votes: 850 },
-                        ]}
-                        columns={[
-                            { title: 'Rank', dataIndex: 'rank', key: 'rank', render: (r) => <div className="w-6 h-6 rounded-full bg-yellow-500 text-black font-bold flex items-center justify-center">{r}</div> },
-                            { title: 'Participant', dataIndex: 'name', key: 'name', render: (t) => <span className="text-white font-medium">{t}</span> },
-                            { title: 'Title', dataIndex: 'title', key: 'title', render: (t) => <span className="text-gray-400">{t}</span> },
-                            { title: 'Votes', dataIndex: 'votes', key: 'votes', render: (v) => <span className="text-pink-500 font-bold">{v}</span> },
-                        ]}
-                        pagination={false}
-                        className="custom-table mt-4"
-                    />
-                    <style jsx global>{`
-                        .custom-table .ant-table { background: transparent; }
-                        .custom-table .ant-table-thead > tr > th { background: #2a2a40; color: #a1a1aa; border-bottom: 1px solid #333; }
-                        .custom-table .ant-table-tbody > tr > td { border-bottom: 1px solid #333; }
-                        .custom-table .ant-table-tbody > tr:hover > td { background: #2a2a40 !important; }
-                    `}</style>
-                </Modal>
-
+                    campaign={selectedCampaign}
+                />
             </ConfigProvider>
-
-        </div >
+        </div>
     );
 }
