@@ -59,8 +59,8 @@ export default function CampaignManagementPage() {
 
     useEffect(() => {
         fetchCampaigns();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [fetchCampaigns]);
+
     const showModal = () => setIsModalOpen(true);
     const handleCancel = () => setIsModalOpen(false);
 

@@ -194,6 +194,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                             className="!bg-[#2e2e48] !border-[#444] !border-dashed hover:!border-purple-500"
                             accept="image/*"
                             showUploadList={true}
+                            disabled={uploadLoading}
                             beforeUpload={async (file) => {
                                 try {
                                     const imgForm = new FormData();
@@ -217,12 +218,19 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                                 return false;
                             }}
                         >
-                            <>
-                                <p className="ant-upload-drag-icon">
-                                    <UploadCloud className="text-gray-400 mx-auto" />
-                                </p>
-                                <p className="text-gray-400">Click or drag file to upload</p>
-                            </>
+                            {uploadLoading ? (
+                                <div className="flex flex-col items-center justify-center py-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-2"></div>
+                                    <p className="text-gray-400">Uploading...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="ant-upload-drag-icon">
+                                        <UploadCloud className="text-gray-400 mx-auto" />
+                                    </p>
+                                    <p className="text-gray-400">Click or drag file to upload</p>
+                                </>
+                            )}
                         </Upload.Dragger>
                     </Form.Item>
                     {imageUrl && (
