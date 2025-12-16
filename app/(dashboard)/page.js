@@ -12,10 +12,11 @@ export default function DashboardOverview() {
         const userData = getLocalStoragedata("userData");
         if (!userData || !userData.isActive) {
             router.push('/login');
-        } else {
+        } else if (!isChecked) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsChecked(true);
         }
-    }, [router]);
+    }, [router, isChecked]);
 
     if (!isChecked) {
         return null;

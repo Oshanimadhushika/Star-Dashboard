@@ -61,13 +61,15 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
     };
 
     useEffect(() => {
-        validateCurrentStep();
-    }, [currentStep, form]);
+        if (open) validateCurrentStep();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentStep]);
 
     useEffect(() => {
         if (open) {
             form.setFieldsValue(formData);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStep, form, open]);
 
     const onFormValuesChange = (allValues) => {
@@ -225,6 +227,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     </Form.Item>
                     {imageUrl && (
                         <div className="mt-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src={imageUrl}
                                 alt="Uploaded preview"

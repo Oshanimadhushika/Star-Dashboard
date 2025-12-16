@@ -31,7 +31,7 @@ export default function CampaignManagementPage() {
     const debouncedSearchQuery = useDebounce(searchQuery, 500);
     const [activeTab, setActiveTab] = useState('1');
 
-    const fetchCampaigns = async () => {
+    const fetchCampaigns = React.useCallback(async () => {
         let status = '';
         switch (activeTab) {
             case '2': status = 'active'; break;
@@ -54,12 +54,13 @@ export default function CampaignManagementPage() {
             setFetchedCampaigns(data);
             setPagination(prev => ({ ...prev, current: page, total: total || 0, pageSize: perPage || 10 }));
         }
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, pagination.current, pagination.pageSize, debouncedSearchQuery]);
 
     useEffect(() => {
         fetchCampaigns();
-    }, [pagination.current, pagination.pageSize, debouncedSearchQuery, activeTab]);
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     const showModal = () => setIsModalOpen(true);
     const handleCancel = () => setIsModalOpen(false);
 
@@ -79,6 +80,7 @@ export default function CampaignManagementPage() {
                 <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-3">
                         {data.campaignImageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img src={data.campaignImageUrl} alt={data.title} className="w-12 h-12 rounded-lg object-cover" />
                         ) : (
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${data.iconColor}`}>

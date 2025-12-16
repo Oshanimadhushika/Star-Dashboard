@@ -49,7 +49,7 @@ export default function Header({ collapsed }) {
                     {getTitle()}
                 </h2>
                 <p className="text-gray-500 text-sm m-0 hidden sm:block">
-                    Welcome back! Here's what's happening with Voice Star today.
+                    Welcome back! Here&apos;s what&apos;s happening with Voice Star today.
                 </p>
             </div>
 
