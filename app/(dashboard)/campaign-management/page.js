@@ -196,12 +196,14 @@ export default function CampaignManagementPage() {
                 })}
             </div>
 
-            <CustomPagination
-                current={pagination.current}
-                total={pagination.total}
-                pageSize={pagination.pageSize}
-                onChange={(page) => setPagination(prev => ({ ...prev, current: page }))}
-            />
+            {pagination.total > pagination.pageSize && (
+                <CustomPagination
+                    current={pagination.current}
+                    total={pagination.total}
+                    pageSize={pagination.pageSize}
+                    onChange={(page) => setPagination(prev => ({ ...prev, current: page }))}
+                />
+            )}
 
             <ConfigProvider
                 theme={{
