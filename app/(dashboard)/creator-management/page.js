@@ -6,6 +6,23 @@ import CustomTable from "@/components/CustomTable";
 import CustomPagination from "@/components/CustomPagination";
 import { UserOutlined } from "@ant-design/icons";
 
+const StatCard = ({ icon: Icon, value, label, colorClass }) => (
+    <div className="border border-gray-100 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm bg-white">
+        <Icon className={`${colorClass} mb-2`} size={24} />
+        <div className="text-gray-500 text-xs mb-1">{label}</div>
+        <div className="text-xl font-bold text-gray-900">{value}</div>
+    </div>
+);
+
+const ReadOnlyInput = ({ label, value }) => (
+    <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-gray-500">{label}</label>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-700 font-medium">
+            {value}
+        </div>
+    </div>
+);
+
 export default function CreatorManagementPage() {
     const [activeTab, setActiveTab] = useState("1");
     const [searchText, setSearchText] = useState("");
@@ -111,23 +128,6 @@ export default function CreatorManagementPage() {
             ),
         },
     ];
-
-    const StatCard = ({ icon: Icon, value, label, colorClass }) => (
-        <div className="border border-gray-100 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm bg-white">
-            <Icon className={`${colorClass} mb-2`} size={24} />
-            <div className="text-gray-500 text-xs mb-1">{label}</div>
-            <div className="text-xl font-bold text-gray-900">{value}</div>
-        </div>
-    );
-
-    const ReadOnlyInput = ({ label, value }) => (
-        <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-500">{label}</label>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-700 font-medium">
-                {value}
-            </div>
-        </div>
-    );
 
     return (
         <div className="min-h-screen bg-white">
@@ -306,6 +306,7 @@ export default function CreatorManagementPage() {
                                                     {selectedCreator.videos.map((video) => (
                                                         <div key={video.id} className="flex gap-4 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
                                                             <div className="w-24 h-24 bg-gray-900 rounded-lg shrink-0 overflow-hidden relative group cursor-pointer">
+                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                                 <img
                                                                     src="https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=2070&auto=format&fit=crop"
                                                                     alt="video thumbnail"
