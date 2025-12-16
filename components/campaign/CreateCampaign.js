@@ -294,10 +294,10 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     <div>
                         <h4 className="text-white font-semibold mb-3">Campaign Settings</h4>
                         <div className="grid grid-cols-2 gap-4 mb-4">
-                            <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants *</span>} rules={[{ required: true, message: 'Required' }]}>
+                            <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants</span>} rules={[{ required: true, message: 'Required' }]}>
                                 <Input placeholder="Leave empty for unlimited" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
                             </Form.Item>
-                            <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age Restriction *</span>} rules={[{ required: true, message: 'Required' }]}>
+                            <Form.Item name="maxAgeLimit" label={<span className="text-white">Age Restriction *</span>} rules={[{ required: true, message: 'Required' }]}>
                                 <Input placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
                             </Form.Item>
                         </div>
