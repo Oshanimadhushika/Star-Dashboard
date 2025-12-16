@@ -4,7 +4,6 @@ import { Edit, Plus, X } from 'lucide-react';
 import { updateCampaign } from '@/app/services/campaignService';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
 import dayjs from 'dayjs';
-
 const { TextArea } = Input;
 
 export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
