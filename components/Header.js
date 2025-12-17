@@ -1,14 +1,20 @@
 'use client';
 
-import React from 'react';
-import { Layout, Avatar, Badge } from 'antd';
+import React, { useState } from 'react';
+import { Layout, Avatar, Badge, Popover } from 'antd';
 import { BellOutlined, UserOutlined } from '@ant-design/icons';
 import { usePathname } from 'next/navigation';
+import NotificationsPopover from '@/components/NotificationsPopover';
 
 const { Header: AntHeader } = Layout;
 
 export default function Header({ collapsed }) {
     const pathname = usePathname();
+    const [open, setOpen] = useState(false);
+
+    const handleOpenChange = (newOpen) => {
+        setOpen(newOpen);
+    };
 
     const getTitle = () => {
         switch (pathname) {
@@ -54,9 +60,18 @@ export default function Header({ collapsed }) {
             </div>
 
             <div className="flex items-center gap-4">
-                <Badge count={2} size="small">
-                    <BellOutlined style={{ color: 'black' }} className="text-xl text-gray-600 cursor-pointer" />
-                </Badge>
+                <Popover
+                    content={<NotificationsPopover onClose={() => setOpen(false)} />}
+                    trigger="click"
+                    open={open}
+                    onOpenChange={handleOpenChange}
+                    placement="bottomRight"
+                    styles={{ body: { padding: 0 } }}
+                >
+                    <Badge count={2} size="small">
+                        <BellOutlined style={{ color: 'black' }} className="text-xl text-gray-600 cursor-pointer" />
+                    </Badge>
+                </Popover>
                 {/* <Avatar icon={<UserOutlined />} className="bg-gradient-to-r from-purple-500 to-pink-500 cursor-pointer" /> */}
             </div>
         </AntHeader>
