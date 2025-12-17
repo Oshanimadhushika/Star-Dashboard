@@ -353,7 +353,6 @@ export default function VideoModerationPage() {
             >
                 {selectedVideo && (
                     <div className="p-0">
-                        {/* Header Section */}
                         <div className={`p-6 ${selectedVideo.status === 'PUBLISHED' ? 'bg-[#ECFDF5]' : 'bg-gray-50'} border-b border-gray-100`}>
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">

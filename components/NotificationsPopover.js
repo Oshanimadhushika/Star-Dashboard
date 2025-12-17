@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from 'antd';
 import { X, Trash2 } from 'lucide-react';
 
 export default function NotificationsPopover({ onClose }) {
