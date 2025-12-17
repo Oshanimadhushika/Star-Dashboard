@@ -80,9 +80,9 @@ export default function LoginPage() {
                     ]}
                 >
                     <Input
-                        prefix={<MailOutlined className="text-white/50" />}
+                        prefix={<MailOutlined className="text-white/70" />}
                         placeholder="admin@example.com"
-                        className="h-10 !bg-white/20 !border-white/30 text-white placeholder-white/50 hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
+                        className="h-10 !bg-white/20 !border-white/30 text-white [&_input::placeholder]:!text-white/60 !font-normal hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
                         style={{ color: 'white' }}
                     />
                 </Form.Item>
@@ -95,7 +95,7 @@ export default function LoginPage() {
                     <Input.Password
                         maxLength={30}
                         placeholder="*******"
-                        className="h-10 !bg-white/20 !border-white/30 text-white placeholder-white/50 hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
+                        className="h-10 !bg-white/20 !border-white/30 text-white [&_input::placeholder]:!text-white/60 !font-normal [&_.anticon]:!text-white/70 hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
                         style={{ color: 'white' }}
                     />
                 </Form.Item>

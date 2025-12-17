@@ -6,7 +6,7 @@ export const loginUser = async (data) => {
 };
 
 export const logoutUser = async () => {
-  return authorizedAxiosInstance.get("/auth/sign-out");
+  return authorizedAxiosInstance.get("/auth/admin/sign-out");
 };
 
 export const authAdmin = async () => {

@@ -59,8 +59,8 @@ export default function CampaignManagementPage() {
 
     useEffect(() => {
         fetchCampaigns();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [fetchCampaigns]);
+
     const showModal = () => setIsModalOpen(true);
     const handleCancel = () => setIsModalOpen(false);
 
@@ -196,12 +196,14 @@ export default function CampaignManagementPage() {
                 })}
             </div>
 
-            <CustomPagination
-                current={pagination.current}
-                total={pagination.total}
-                pageSize={pagination.pageSize}
-                onChange={(page) => setPagination(prev => ({ ...prev, current: page }))}
-            />
+            {pagination.total > pagination.pageSize && (
+                <CustomPagination
+                    current={pagination.current}
+                    total={pagination.total}
+                    pageSize={pagination.pageSize}
+                    onChange={(page) => setPagination(prev => ({ ...prev, current: page }))}
+                />
+            )}
 
             <ConfigProvider
                 theme={{

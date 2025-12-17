@@ -29,7 +29,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
         reviewStartTime: null,
         maxParticipants: '',
         maxAgeLimit: '',
-        minAgeLimit: 18,
+        minAgeLimit: '',
         rules: [],
     });
 
@@ -38,7 +38,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
         1: [
             "enrollStartTime", "completeTime", "votingStartTime",
             "reviewStartTime",
-            "maxParticipants", "maxAgeLimit"
+            "maxParticipants", "minAgeLimit", "maxAgeLimit"
         ],
         2: [],
         3: []
@@ -72,7 +72,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStep, form, open]);
 
-    const onFormValuesChange = (allValues) => {
+    const onFormValuesChange = (_, allValues) => {
         setFormData(prev => ({ ...prev, ...allValues }));
         validateCurrentStep();
     };
@@ -119,7 +119,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
             reviewStartTime: null,
             maxParticipants: '',
             maxAgeLimit: '',
-            minAgeLimit: 18,
+            minAgeLimit: '',
             rules: [],
         });
         setNewRule('');
@@ -194,6 +194,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                             className="!bg-[#2e2e48] !border-[#444] !border-dashed hover:!border-purple-500"
                             accept="image/*"
                             showUploadList={true}
+                            disabled={uploadLoading}
                             beforeUpload={async (file) => {
                                 try {
                                     const imgForm = new FormData();
@@ -217,12 +218,19 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                                 return false;
                             }}
                         >
-                            <>
-                                <p className="ant-upload-drag-icon">
-                                    <UploadCloud className="text-gray-400 mx-auto" />
-                                </p>
-                                <p className="text-gray-400">Click or drag file to upload</p>
-                            </>
+                            {uploadLoading ? (
+                                <div className="flex flex-col items-center justify-center py-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-2"></div>
+                                    <p className="text-gray-400">Uploading...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="ant-upload-drag-icon">
+                                        <UploadCloud className="text-gray-400 mx-auto" />
+                                    </p>
+                                    <p className="text-gray-400">Click or drag file to upload</p>
+                                </>
+                            )}
                         </Upload.Dragger>
                     </Form.Item>
                     {imageUrl && (
@@ -243,7 +251,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
             content: (
                 <div className="flex flex-col gap-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
+                        <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
                                 disabledDate={(current) => {
@@ -251,7 +259,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                                 }}
                             />
                         </Form.Item>
-                        <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start Date*</span>} rules={[{ required: true, message: 'Required' }]}>
+                        <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                             <DatePicker
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
                                 disabledDate={(current) => {
@@ -286,11 +294,14 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     <div>
                         <h4 className="text-white font-semibold mb-3">Campaign Settings</h4>
                         <div className="grid grid-cols-2 gap-4 mb-4">
-                            <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants *</span>} rules={[{ required: true, message: 'Required' }]}>
+                            <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants</span>} rules={[{ required: false, message: 'Required' }]}>
                                 <Input placeholder="Leave empty for unlimited" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
                             </Form.Item>
-                            <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age Restriction *</span>} rules={[{ required: true, message: 'Required' }]}>
-                                <Input placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
+                            <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age*</span>} rules={[{ required: true, message: 'Required' }]}>
+                                <Input placeholder="Min Age" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
+                            </Form.Item>
+                            <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age*</span>} rules={[{ required: true, message: 'Required' }]}>
+                                <Input placeholder="Max Age" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
                             </Form.Item>
                         </div>
                     </div>
@@ -342,15 +353,17 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     <div className="mb-6">
                         <h4 className="font-semibold mb-2">Schedule & Settings</h4>
                         <div className="grid grid-cols-2 gap-y-2 text-sm">
-                            <div className="text-gray-400">Campaign Start - End</div>
-                            <div className="text-right">
-                                {formData.enrollStartTime ? dayjs(formData.enrollStartTime).format('YYYY-MM-DD') : 'Not set'} -
-                                {formData.completeTime ? dayjs(formData.completeTime).format('YYYY-MM-DD') : 'Not set'}
-                            </div>                            <div className="text-gray-400">Voting Start - End</div>
-                            <div className="text-right">
-                                {formData.votingStartTime ? dayjs(formData.votingStartTime).format('YYYY-MM-DD') : 'Not set'} -
-                                {formData.votingEndTime ? dayjs(formData.votingEndTime).format('YYYY-MM-DD') : 'Not set'}
-                            </div>
+                            <div className="text-gray-400">Campaign Start Date</div>
+                            <div className="text-right">{formData.enrollStartTime ? dayjs(formData.enrollStartTime).format('YYYY-MM-DD') : 'Not set'}</div>
+
+                            <div className="text-gray-400">Review Start Date</div>
+                            <div className="text-right">{formData.reviewStartTime ? dayjs(formData.reviewStartTime).format('YYYY-MM-DD') : 'Not set'}</div>
+
+                            <div className="text-gray-400">Voting Start Date</div>
+                            <div className="text-right">{formData.votingStartTime ? dayjs(formData.votingStartTime).format('YYYY-MM-DD') : 'Not set'}</div>
+
+                            <div className="text-gray-400">Complete Date</div>
+                            <div className="text-right">{formData.completeTime ? dayjs(formData.completeTime).format('YYYY-MM-DD') : 'Not set'}</div>
                         </div>
                     </div>
 
@@ -402,7 +415,6 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     layout="vertical"
                     onValuesChange={onFormValuesChange}
                     initialValues={{
-                        minAgeLimit: 18,
                     }}
                     requiredMark={false}
                 >
@@ -450,7 +462,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                                     completeTime: formatDate(formValues.completeTime),
                                     maxParticipants: formValues.maxParticipants,
                                     maxAgeLimit: formValues.maxAgeLimit,
-                                    minAgeLimit: formValues.minAgeLimit || 18,
+                                    minAgeLimit: formValues.minAgeLimit,
                                     campaignRules: formValues.rules || [],
                                 };
 
