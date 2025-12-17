@@ -54,6 +54,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
         >
             <Form
                 form={editForm}
+                requiredMark={false}
                 layout="vertical"
                 onValuesChange={(_, allValues) => {
                     if (!campaign) return;
@@ -143,25 +144,25 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                 </Form.Item>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <Form.Item name="enrollStartTime" label={<span className="text-white">Enroll Start</span>} rules={[{ required: true, message: 'Required' }]}>
+                    <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             disabled={campaign?.enrollStartTime && !dayjs(campaign.enrollStartTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
-                    <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start</span>} rules={[{ required: true, message: 'Required' }]}>
+                    <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             disabled={campaign?.reviewStartTime && !dayjs(campaign.reviewStartTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
-                    <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start</span>} rules={[{ required: true, message: 'Required' }]}>
+                    <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             disabled={campaign?.votingStartTime && !dayjs(campaign.votingStartTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
-                    <Form.Item name="completeTime" label={<span className="text-white">End Date</span>} rules={[{ required: true, message: 'Required' }]}>
+                    <Form.Item name="completeTime" label={<span className="text-white">Complete Date *</span>} rules={[{ required: true, message: 'Required' }]}>
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             disabled={campaign?.completeTime && !dayjs(campaign.completeTime).isAfter(dayjs(), 'day')}
@@ -173,10 +174,10 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants</span>} rules={[{ required: true, message: 'Required' }]}>
                         <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
-                    <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age</span>}>
+                    <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age *</span>} rules={[{ required: true, message: 'Required' }]}>
                         <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
-                    <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age</span>} rules={[{ required: true, message: 'Required' }]}>
+                    <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age *</span>} rules={[{ required: true, message: 'Required' }]}>
                         <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
                 </div>
