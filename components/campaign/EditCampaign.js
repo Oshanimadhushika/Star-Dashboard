@@ -23,11 +23,11 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                 reviewStartTime: campaign.reviewStartTime ? dayjs(campaign.reviewStartTime) : null,
                 votingStartTime: campaign.votingStartTime ? dayjs(campaign.votingStartTime) : null,
                 completeTime: campaign.completeTime ? dayjs(campaign.completeTime) : null,
-                maxParticipants: campaign.maxParticipants,
-                maxAgeLimit: campaign.maxAgeLimit,
-                minAgeLimit: campaign.minAgeLimit,
+                maxParticipants: campaign.maxParticipants || null,
+                maxAgeLimit: campaign.maxAgeLimit || null,
+                minAgeLimit: campaign.minAgeLimit || null,
                 rules: campaign.campaignRules || [],
-                status: campaign.status || 'Upcoming',
+                status: campaign.status || '',
             };
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setInitialFormValues(values);
@@ -88,9 +88,9 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                             reviewStartTime: formatDate(values.reviewStartTime),
                             votingStartTime: formatDate(values.votingStartTime),
                             completeTime: formatDate(values.completeTime),
-                            maxParticipants: values.maxParticipants,
-                            maxAgeLimit: values.maxAgeLimit,
-                            minAgeLimit: values.minAgeLimit,
+                            maxParticipants: values.maxParticipants || null,
+                            maxAgeLimit: values.maxAgeLimit || null,
+                            minAgeLimit: values.minAgeLimit || null,
                             campaignRules: values.rules || []
                         };
 
@@ -144,25 +144,73 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                 </Form.Item>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
+                    <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Campaign start date is required' }]}>
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             disabled={campaign?.enrollStartTime && !dayjs(campaign.enrollStartTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
-                    <Form.Item name="reviewStartTime" label={<span className="text-white">Review Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
+                    <Form.Item
+                        name="reviewStartTime"
+                        label={<span className="text-white">Review Start Date *</span>}
+                        dependencies={['enrollStartTime']}
+                        rules={[
+                            { required: true, message: 'Required' },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    const start = getFieldValue('enrollStartTime');
+                                    if (!value || !start || value.isAfter(start, 'day')) {
+                                        return Promise.resolve();
+                                    }
+                                    return Promise.reject(new Error('Review start date must be after campaign start date'));
+                                },
+                            }),
+                        ]}
+                    >
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             disabled={campaign?.reviewStartTime && !dayjs(campaign.reviewStartTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
-                    <Form.Item name="votingStartTime" label={<span className="text-white">Voting Start Date *</span>} rules={[{ required: true, message: 'Required' }]}>
+                    <Form.Item
+                        name="votingStartTime"
+                        label={<span className="text-white">Voting Start Date *</span>}
+                        dependencies={['reviewStartTime']}
+                        rules={[
+                            { required: true, message: 'Required' },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    const start = getFieldValue('reviewStartTime');
+                                    if (!value || !start || value.isAfter(start, 'day')) {
+                                        return Promise.resolve();
+                                    }
+                                    return Promise.reject(new Error('Voting start date must be after review start date'));
+                                },
+                            }),
+                        ]}
+                    >
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             disabled={campaign?.votingStartTime && !dayjs(campaign.votingStartTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
-                    <Form.Item name="completeTime" label={<span className="text-white">Complete Date *</span>} rules={[{ required: true, message: 'Required' }]}>
+                    <Form.Item
+                        name="completeTime"
+                        label={<span className="text-white">Complete Date *</span>}
+                        dependencies={['votingStartTime']}
+                        rules={[
+                            { required: true, message: 'Required' },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    const start = getFieldValue('votingStartTime');
+                                    if (!value || !start || value.isAfter(start, 'day')) {
+                                        return Promise.resolve();
+                                    }
+                                    return Promise.reject(new Error('Complete date must be after voting start date'));
+                                },
+                            }),
+                        ]}
+                    >
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             disabled={campaign?.completeTime && !dayjs(campaign.completeTime).isAfter(dayjs(), 'day')}
@@ -171,14 +219,44 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
-                    <Form.Item name="maxParticipants" label={<span className="text-white">Max Participants</span>} rules={[{ required: true, message: 'Required' }]}>
-                        <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                    <Form.Item
+                        name="maxParticipants"
+                        label={<span className="text-white">Max Participants</span>}
+                        rules={[
+                            { required: false },
+                            {
+                                validator: (_, value) => {
+                                    if (value && parseInt(value) <= 0) {
+                                        return Promise.reject(new Error('Maximum participants must be greater than 0'));
+                                    }
+                                    return Promise.resolve();
+                                }
+                            }
+                        ]}
+                    >
+                        <Input type="number" placeholder="Leave empty for unlimited" className="!bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
-                    <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age *</span>} rules={[{ required: true, message: 'Required' }]}>
-                        <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                    <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age</span>} rules={[{ required: false, message: 'Required' }]}>
+                        <Input type="number" placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
-                    <Form.Item name="maxAgeLimit" label={<span className="text-white">Max Age *</span>} rules={[{ required: true, message: 'Required' }]}>
-                        <Input type="number" className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                    <Form.Item
+                        name="maxAgeLimit"
+                        label={<span className="text-white">Max Age</span>}
+                        dependencies={['minAgeLimit']}
+                        rules={[
+                            { required: false },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    const min = getFieldValue('minAgeLimit');
+                                    if (value && min && parseInt(value) <= parseInt(min)) {
+                                        return Promise.reject(new Error('Maximum age must be greater than minimum age'));
+                                    }
+                                    return Promise.resolve();
+                                },
+                            }),
+                        ]}
+                    >
+                        <Input type="number" placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
                 </div>
 

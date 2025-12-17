@@ -186,12 +186,7 @@ export default function VideoModerationPage() {
                             handleRowClick(record);
                         }}
                     >
-                        {user?.profilePicture ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={user.profilePicture} alt="" className="w-full h-full object-cover rounded-lg" />
-                        ) : (
-                            <VideoIcon />
-                        )}
+                        <VideoIcon />
                     </div>
                     <div>
                         <div className="font-medium text-gray-700 line-clamp-1">{record.title || "Untitled Video"}</div>
@@ -406,7 +401,7 @@ export default function VideoModerationPage() {
                             </div>
 
                             <div className="flex flex-col md:flex-row gap-8">
-                                {/* Video Preview (Left) */}
+                                {/* Video Preview */}
                                 <div className="flex-1">
                                     <h3 className="text-lg font-bold text-gray-900 mb-4">Video Preview</h3>
                                     {selectedVideo.videoUrl ? (
@@ -453,26 +448,25 @@ export default function VideoModerationPage() {
 
                                 {/* Right Column */}
                                 <div className="flex-1 flex flex-col gap-8">
-                                    {/* Creator Info */}
-                                    <div>
+                                    <div className="flex-1 h-full flex flex-col">
                                         <h3 className="text-lg font-bold text-gray-900 mb-4">Creator Information</h3>
-                                        <div className="flex justify-between items-center text-center">
+                                        <div className="flex flex-col  justify-around text-left gap-8">
                                             <div>
-                                                <div className="text-2xl font-bold text-gray-900">{selectedVideo.creatorStats?.totalVideos || 0}</div>
+                                                <div className="text-4xl font-bold text-gray-900">{selectedVideo.creatorStats?.totalVideos || 0}</div>
                                                 <div className="text-gray-500 text-sm">Total Videos</div>
                                             </div>
                                             <div>
-                                                <div className="text-2xl font-bold text-gray-900">{selectedVideo.creatorStats?.totalViews || 0}</div>
+                                                <div className="text-4xl font-bold text-gray-900">{selectedVideo.creatorStats?.totalViews || 0}</div>
                                                 <div className="text-gray-500 text-sm">Total Views</div>
                                             </div>
                                             <div>
-                                                <div className="text-2xl font-bold text-gray-900">{selectedVideo.creatorStats?.totalVotes || 0}</div>
+                                                <div className="text-4xl font-bold text-gray-900">{selectedVideo.creatorStats?.totalVotes || 0}</div>
                                                 <div className="text-gray-500 text-sm">Total Votes</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div>
+                                    {/* <div>
                                         <h3 className="text-lg font-bold text-gray-900 mb-4">Moderation Actions</h3>
                                         <div className="flex flex-col gap-3">
                                             <Button
@@ -500,7 +494,7 @@ export default function VideoModerationPage() {
                                                 <Flag size={20} /> Remove Flag
                                             </Button>
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </div>
