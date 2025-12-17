@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { User, Lock, Bell, CheckSquare, Square } from 'lucide-react';
-import { Input, Button, Checkbox } from 'antd';
+import { Input } from 'antd';
 
 export default function SettingsPage() {
     const [notifications, setNotifications] = useState({
