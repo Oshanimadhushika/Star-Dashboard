@@ -4,6 +4,7 @@ import { Tabs, Input, Button, Avatar, Tag, ConfigProvider } from "antd";
 import { Search, Ban } from "lucide-react";
 import CustomTable from "@/components/CustomTable";
 import CustomPagination from "@/components/CustomPagination";
+import UserDetailsModal from "@/components/UserDetailsModal";
 import { UserOutlined } from "@ant-design/icons";
 
 const { TabPane } = Tabs;
@@ -12,6 +13,8 @@ export default function UserManagementPage() {
     const [activeTab, setActiveTab] = useState("1");
     const [searchText, setSearchText] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const dummyData = Array.from({ length: 12 }).map((_, i) => ({
         id: i + 1,
@@ -21,10 +24,18 @@ export default function UserManagementPage() {
         subscriptionColor: i % 3 === 0 ? "#EAB308" : i % 3 === 1 ? "#94A3B8" : "#A855F7",
         status: i === 4 ? "Suspended" : "Active",
         joined: "11/25/2025",
+        lastActive: "11/25/2025",
+        mobile: "0768888888"
     }));
 
-    const handleBan = (record) => {
+    const handleBan = (e, record) => {
+        e.stopPropagation();
         console.log("Ban user:", record);
+    };
+
+    const handleRowClick = (record) => {
+        setSelectedUser(record);
+        setIsModalOpen(true);
     };
 
     const columns = [
@@ -82,7 +93,7 @@ export default function UserManagementPage() {
                     danger
                     size="small"
                     className="flex items-center gap-1 !bg-red-50 hover:!bg-red-100 border-red-200 text-red-500"
-                    onClick={() => handleBan(record)}
+                    onClick={(e) => handleBan(e, record)}
                 >
                     <Ban size={14} /> Ban
                 </Button>
@@ -124,6 +135,10 @@ export default function UserManagementPage() {
                 columns={columns}
                 dataSource={dummyData}
                 loading={false}
+                onRow={(record) => ({
+                    onClick: () => handleRowClick(record),
+                    style: { cursor: 'pointer' }
+                })}
             />
 
             <CustomPagination
@@ -131,6 +146,12 @@ export default function UserManagementPage() {
                 total={dummyData.length * 3}
                 pageSize={10}
                 onChange={(page) => setCurrentPage(page)}
+            />
+
+            <UserDetailsModal
+                open={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                user={selectedUser}
             />
         </div>
     );

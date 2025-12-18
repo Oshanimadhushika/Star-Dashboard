@@ -270,10 +270,10 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                                 </Button>
                             </div>
                             <div className="flex flex-col gap-2">
-                                {fields.map(({ key, ...restField }, index) => (
-                                    <div key={key} className="flex gap-2">
+                                {fields.map((field, index) => (
+                                    <div key={field.key} className="flex gap-2">
                                         <Form.Item
-                                            {...restField}
+                                            {...field}
                                             noStyle
                                         >
                                             <Input className="!bg-[#2e2e48] !border-[#444] !text-white" placeholder="Rule" />
