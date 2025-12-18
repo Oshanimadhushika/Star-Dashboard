@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Layout, Avatar, Badge, Popover } from 'antd';
-import { BellOutlined, UserOutlined } from '@ant-design/icons';
+import { Layout, Badge, Popover } from 'antd';
+import { BellOutlined } from '@ant-design/icons';
 import { usePathname } from 'next/navigation';
 import NotificationsPopover from '@/components/NotificationsPopover';
 
