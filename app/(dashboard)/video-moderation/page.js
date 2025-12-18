@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { Tabs, Input, Button, Modal, Tooltip } from "antd";
-import { Search, Flag, Check, X, Play, Eye, TrendingUp, Calendar, Award, XCircle, Trash2 } from "lucide-react";
+import { Search, Flag, Check, X, Play, Eye, TrendingUp, Calendar, Award, XCircle, Trash2, Ban, CheckCircle } from "lucide-react";
 import CustomTable from "@/components/CustomTable";
 import CustomPagination from "@/components/CustomPagination";
-import { getAllVideos, approveVideo, rejectVideo, deactivateVideo } from "@/app/services/videoService";
+import { getAllVideos, approveVideo, rejectVideo, deactivateVideo, activateVideo, deleteVideo } from "@/app/services/videoService";
 import useLazyFetch from "@/app/hooks/useLazyFetch";
 import useDebounce from "@/app/hooks/useDebounce";
 import dayjs from "dayjs";
@@ -35,6 +35,8 @@ export default function VideoModerationPage() {
     const { trigger: triggerApprove } = useLazyFetch(approveVideo);
     const { trigger: triggerReject } = useLazyFetch(rejectVideo);
     const { trigger: triggerDeactivate } = useLazyFetch(deactivateVideo);
+    const { trigger: triggerActivate } = useLazyFetch(activateVideo);
+    const { trigger: triggerDelete } = useLazyFetch(deleteVideo);
 
     const fetchVideos = useCallback(async () => {
         let status = '';
@@ -128,11 +130,47 @@ export default function VideoModerationPage() {
         });
     };
 
+    const handleActivate = (record) => {
+        modal.confirm({
+            title: 'Activate Video',
+            content: 'Are you sure you want to activate this video?',
+            okText: 'Activate',
+            cancelText: 'Cancel',
+            onOk: async () => {
+                const res = await triggerActivate({ id: record.id }, { successMsg: "Video activated successfully!", errorMsg: "Failed to activate video." });
+                if (res?.data?.success) {
+                    setIsModalOpen(false);
+                    fetchVideos();
+                }
+            }
+        });
+    };
+
+    const handleDelete = (record) => {
+        modal.confirm({
+            title: 'Delete Video',
+            content: 'Are you sure you want to delete this video permanently?',
+            okText: 'Delete',
+            okType: 'danger',
+            cancelText: 'Cancel',
+            onOk: async () => {
+                const res = await triggerDelete({ id: record.id }, { successMsg: "Video deleted successfully!", errorMsg: "Failed to delete video." });
+                if (res?.data?.success) {
+                    setIsModalOpen(false);
+                    fetchVideos();
+                }
+            }
+        });
+    };
+
     const handleAction = (e, action, record) => {
         e.stopPropagation();
         if (action === 'approve') handleApprove(record);
         if (action === 'reject') handleReject(record);
         if (action === 'delete') handleDeactivate(record);
+        if (action === 'permanent_delete') handleDelete(record);
+        if (action === 'activate') handleActivate(record);
+        if (action === 'view') handleRowClick(record);
         // if (action === 'flag') ... 
     };
 
@@ -155,13 +193,13 @@ export default function VideoModerationPage() {
                 styles = "bg-red-50 text-red-500 border-red-500";
                 break;
             case "Deactivated":
-                styles = "bg-slate-50 text-slate-500 border-slate-500";
+                styles = "bg-slate-100 text-slate-500 border-slate-500";
                 break;
             default:
                 styles = "bg-gray-100 text-gray-600 border-gray-200";
         }
         return (
-            <span className={`px-3 py-1 rounded-full text-xs font-medium border ${styles}`}>
+            <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${styles}`}>
                 {formattedStatus}
             </span>
         );
@@ -252,11 +290,14 @@ export default function VideoModerationPage() {
 
                 return (
                     <div className="flex items-center justify-end gap-2">
-                        {/* <Tooltip title="Flag">
-                            <button onClick={(e) => handleAction(e, "flag", record)} className="text-yellow-500 hover:bg-yellow-50 p-1 rounded">
-                                <Flag size={18} />
+                        <Tooltip title="View Details">
+                            <button
+                                onClick={(e) => handleAction(e, "view", record)}
+                                className="p-1 rounded transition-colors text-gray-500 hover:bg-gray-50"
+                            >
+                                <Eye size={18} />
                             </button>
-                        </Tooltip> */}
+                        </Tooltip>
 
                         {isPending ? (
                             <>
@@ -279,6 +320,26 @@ export default function VideoModerationPage() {
                                     </button>
                                 </Tooltip>
                             </>
+                        ) : record.status === 'DEACTIVATED' ? (
+                            <Tooltip title={actionable ? "Activate" : "Voting Started"}>
+                                <button
+                                    onClick={(e) => actionable && handleAction(e, "activate", record)}
+                                    className={`p-1 rounded transition-colors ${actionable ? "text-green-500 hover:bg-green-50" : "text-gray-300 cursor-not-allowed"}`}
+                                    disabled={!actionable}
+                                >
+                                    <CheckCircle size={18} />
+                                </button>
+                            </Tooltip>
+                        ) : record.status === 'REJECTED' ? (
+                            <Tooltip title={actionable ? "Delete" : "Voting Started"}>
+                                <button
+                                    onClick={(e) => actionable && handleAction(e, "permanent_delete", record)}
+                                    className={`p-1 rounded transition-colors ${actionable ? "text-red-500 hover:bg-red-50" : "text-gray-300 cursor-not-allowed"}`}
+                                    disabled={!actionable}
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </Tooltip>
                         ) : (
                             <Tooltip title={actionable ? "Deactivate" : "Voting Started"}>
                                 <button
@@ -286,7 +347,7 @@ export default function VideoModerationPage() {
                                     className={`p-1 rounded transition-colors ${actionable ? "text-red-500 hover:bg-red-50" : "text-gray-300 cursor-not-allowed"}`}
                                     disabled={!actionable}
                                 >
-                                    <Trash2 size={18} />
+                                    <Ban size={18} />
                                 </button>
                             </Tooltip>
                         )}
@@ -367,7 +428,7 @@ export default function VideoModerationPage() {
             >
                 {selectedVideo && (
                     <div className="p-0">
-                        <div className={`p-6 ${selectedVideo.status === 'PUBLISHED' ? 'bg-[#ECFDF5]' : 'bg-gray-50'} border-b border-gray-100`}>
+                        <div className={`p-6 bg-[#ECFDF5] border-b border-gray-100`}>
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
                                     {selectedVideo.user?.profilePicture ? (
@@ -460,10 +521,10 @@ export default function VideoModerationPage() {
                                 </div>
 
                                 {/* Right Column */}
-                                <div className="flex-1 flex flex-col gap-8">
-                                    <div className="flex-1 h-full flex flex-col">
+                                <div className="flex-1 flex flex-col justify-around gap-12">
+                                    <div className="flex flex-col">
                                         <h3 className="text-lg font-bold text-gray-900 mb-4">Creator Information</h3>
-                                        <div className="flex flex-col  justify-around text-left gap-8">
+                                        <div className="flex flex-row justify-around text-left gap-3">
                                             <div>
                                                 <div className="text-4xl font-bold text-gray-900">{selectedVideo.creatorStats?.totalVideos || 0}</div>
                                                 <div className="text-gray-500 text-sm">Total Videos</div>
@@ -479,35 +540,53 @@ export default function VideoModerationPage() {
                                         </div>
                                     </div>
 
-                                    {/* <div>
+                                    <div>
                                         <h3 className="text-lg font-bold text-gray-900 mb-4">Moderation Actions</h3>
                                         <div className="flex flex-col gap-3">
-                                            <Button
-                                                danger
-                                                size="large"
-                                                onClick={() => handleReject(selectedVideo)}
-                                                className="w-full flex items-center justify-center gap-2 !bg-[#C03539] !text-white hover:!bg-[#a02c30] !border-none !h-12 !text-base rounded-lg"
-                                                disabled={!isActionable(selectedVideo)}
-                                            >
-                                                <XCircle size={20} /> Reject Video
-                                            </Button>
-                                            <Button
-                                                size="large"
-                                                onClick={() => handleApprove(selectedVideo)}
-                                                className="w-full flex items-center justify-center gap-2 !bg-[#659E75] !text-white hover:!bg-[#558b65] !border-none !h-12 !text-base rounded-lg"
-                                                disabled={!isActionable(selectedVideo)}
-                                            >
-                                                <Check size={20} /> Approve Video
-                                            </Button>
-                                            <Button
-                                                disabled={!isActionable(selectedVideo)}
-                                                size="large"
-                                                className="w-full flex items-center justify-center gap-2 !bg-[#659E75] !text-white hover:!bg-[#558b65] !border-none !h-12 !text-base rounded-lg"
-                                            >
-                                                <Flag size={20} /> Remove Flag
-                                            </Button>
+                                            {selectedVideo.status === 'PUBLISHED' && (
+                                                <Button
+                                                    danger
+                                                    size="large"
+                                                    onClick={() => handleDeactivate(selectedVideo)}
+                                                    className="w-full flex items-center justify-center gap-2 !bg-[#C5C5C5] !text-gray-600 hover:!bg-gray-200 !border-none !h-12 !text-base rounded-lg font-medium"
+                                                >
+                                                    Deactivate
+                                                </Button>
+                                            )}
+
+                                            {selectedVideo.status === 'DEACTIVATED' && (
+                                                <Button
+                                                    size="large"
+                                                    onClick={() => handleActivate(selectedVideo)}
+                                                    className="w-full flex items-center justify-center gap-2 !bg-[#00D222] !text-white hover:!bg-[#059669] !border-none !h-12 !text-base rounded-lg font-medium"
+                                                >
+                                                    <Check size={20} /> Active Now
+                                                </Button>
+                                            )}
+
+                                            {selectedVideo.status === 'PENDING' && (
+                                                <>
+                                                    <Button
+                                                        danger
+                                                        size="large"
+                                                        onClick={() => handleReject(selectedVideo)}
+                                                        className="w-full flex items-center justify-center gap-2 !bg-[#C03539] !text-white hover:!bg-[#a02c30] !border-none !h-12 !text-base rounded-lg"
+                                                        disabled={!isActionable(selectedVideo)}
+                                                    >
+                                                        <XCircle size={20} /> Reject Video
+                                                    </Button>
+                                                    <Button
+                                                        size="large"
+                                                        onClick={() => handleApprove(selectedVideo)}
+                                                        className="w-full flex items-center justify-center gap-2 !bg-[#659E75] !text-white hover:!bg-[#558b65] !border-none !h-12 !text-base rounded-lg"
+                                                        disabled={!isActionable(selectedVideo)}
+                                                    >
+                                                        <Check size={20} /> Approve Video
+                                                    </Button>
+                                                </>
+                                            )}
                                         </div>
-                                    </div> */}
+                                    </div>
                                 </div>
                             </div>
                         </div>

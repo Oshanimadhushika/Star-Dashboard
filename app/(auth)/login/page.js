@@ -51,14 +51,14 @@ export default function LoginPage() {
     }
     return (
         <div
-            className="w-full max-w-[400px] p-8 rounded-2xl border border-white/20 shadow-xl backdrop-blur-md bg-white/10 "
+            className="w-full max-w-[400px] p-8 rounded-2xl border border-white/20 shadow-xl backdrop-blur-md !bg-white/70 "
         >
             <div className="flex flex-col items-center mb-8">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center mb-2 shadow-lg">
                     <AudioOutlined className="text-white text-xl" />
                 </div>
-                <h1 className="text-white text-xl font-bold">Voice Star</h1>
-                <p className="text-white/60 text-sm">Admin Portal</p>
+                <h1 className="text-black text-xl font-bold">Voice Star</h1>
+                <p className="text-black/60 text-sm">Admin Portal</p>
             </div>
 
             <Form
@@ -71,7 +71,7 @@ export default function LoginPage() {
                 className="auth-form"
             >
                 <Form.Item
-                    label={<span className="text-white font-medium">Email</span>}
+                    label={<span className="text-black font-medium">Email</span>}
                     name="userName"
                     validateTrigger={['onChange', 'onBlur']}
                     rules={[
@@ -80,23 +80,23 @@ export default function LoginPage() {
                     ]}
                 >
                     <Input
-                        prefix={<MailOutlined className="text-white/70" />}
+                        prefix={<MailOutlined className="text-black/70" />}
                         placeholder="admin@example.com"
-                        className="h-10 !bg-white/20 !border-white/30 text-white [&_input::placeholder]:!text-white/60 !font-normal hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
-                        style={{ color: 'white' }}
+                        className="h-10 !bg-black/5 !border-black/10 text-black [&_input::placeholder]:!text-black/40 !font-normal hover:bg-black/10 !focus:bg-black/10 !focus:border-black/30"
+                        style={{ color: 'black' }}
                     />
                 </Form.Item>
 
                 <Form.Item
-                    label={<span className="text-white font-medium">Password</span>}
+                    label={<span className="text-black font-medium">Password</span>}
                     name="password"
                     rules={[{ required: true, message: 'Password is required.' }]}
                 >
                     <Input.Password
                         maxLength={30}
                         placeholder="*******"
-                        className="h-10 !bg-white/20 !border-white/30 text-white [&_input::placeholder]:!text-white/60 !font-normal [&_.anticon]:!text-white/70 hover:bg-white/30 !focus:bg-white/30 !focus:border-white/50"
-                        style={{ color: 'white' }}
+                        className="h-10 !bg-black/5 !border-black/10 text-black [&_input::placeholder]:!text-black/40 !font-normal [&_.anticon]:!text-black/70 hover:bg-black/10 !focus:bg-black/10 !focus:border-black/30"
+                        style={{ color: 'black' }}
                     />
                 </Form.Item>
 

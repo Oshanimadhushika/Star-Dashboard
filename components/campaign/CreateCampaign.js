@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Button, Modal, Upload, Select, DatePicker, Steps, InputNumber, Form } from 'antd';
+import { Input, Button, Modal, Upload, Select, DatePicker, Steps, InputNumber, Form, message } from 'antd';
 import { Edit, Plus, UploadCloud, X, Check, CheckCircle } from 'lucide-react';
 import { createCampaign, uploadCampaignImage } from '@/app/services/campaignService';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
@@ -164,7 +164,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     </Form.Item>
                     <Form.Item
                         name="pricePool"
-                        label={<span className="text-white">Price amount *</span>}
+                        label={<span className="text-white">Price Amount *</span>}
                         rules={[{ required: true, message: 'Please enter price amount' }]}
                     >
                         <InputNumber
@@ -188,13 +188,19 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                         <Input />
                     </Form.Item>
 
-                    <Form.Item label={<span className="text-white">Campaign image(Optional)</span>}>
+                    <Form.Item label={<span className="text-white">Campaign Image(Optional)</span>}>
                         <Upload.Dragger
                             className="!bg-[#2e2e48] !border-[#444] !border-dashed hover:!border-purple-500"
                             accept="image/*"
                             showUploadList={true}
                             disabled={uploadLoading}
                             beforeUpload={async (file) => {
+                                const isLt5M = file.size / 1024 / 1024 < 5;
+                                if (!isLt5M) {
+                                    message.error('File size exceeds the maximum limit of 5 MB');
+                                    return Upload.LIST_IGNORE;
+                                }
+
                                 try {
                                     const imgForm = new FormData();
                                     imgForm.append("image", file);

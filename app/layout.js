@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Voice-App",
-  description: "Voice-App",
+  title: "Voice-Star",
+  description: "Voice-Star",
 };
 
 export default function RootLayout({ children }) {

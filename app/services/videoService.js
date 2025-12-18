@@ -15,3 +15,11 @@ export const rejectVideo = async (data) => {
 export const deactivateVideo = async (data) => {
     return authorizedAxiosInstance.post("/campaign/admin/video/deactivate", data);
 };
+
+export const activateVideo = async (data) => {
+    return authorizedAxiosInstance.post("/campaign/admin/video/activate", data);
+};
+
+export const deleteVideo = async (data) => {
+    return authorizedAxiosInstance.post("/campaign/admin/video/delete", data);
+};
