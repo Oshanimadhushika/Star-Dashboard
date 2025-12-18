@@ -189,7 +189,11 @@ export default function VideoModerationPage() {
                         <VideoIcon />
                     </div>
                     <div>
-                        <div className="font-medium text-gray-700 line-clamp-1">{record.title || "Untitled Video"}</div>
+                        <div className="font-medium text-gray-700">
+                            {(record.title || "Untitled Video").length > 15
+                                ? `${(record.title || "Untitled Video").slice(0, 15)}...`
+                                : (record.title || "Untitled Video")}
+                        </div>
                     </div>
                 </div>
             ),
@@ -201,7 +205,11 @@ export default function VideoModerationPage() {
             render: (user) => (
                 <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
-                    <span className="text-gray-500">{user?.name || user?.userName || "Unknown"}</span>
+                    <span className="text-gray-500">
+                        {(user?.name || user?.userName || "Unknown").length > 20
+                            ? `${(user?.name || user?.userName || "Unknown").slice(0, 20)}...`
+                            : (user?.name || user?.userName || "Unknown")}
+                    </span>
                 </div>
             ),
         },
@@ -209,7 +217,13 @@ export default function VideoModerationPage() {
             title: "Campaign",
             dataIndex: "campaign",
             key: "campaign",
-            render: (campaign) => <span className="text-gray-500">{campaign?.title || "-"}</span>,
+            render: (campaign) => (
+                <span className="text-gray-500">
+                    {(campaign?.title || "-").length > 15
+                        ? `${(campaign?.title || "-").slice(0, 15)}...`
+                        : (campaign?.title || "-")}
+                </span>
+            ),
         },
         {
             title: "Views",
