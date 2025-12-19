@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Button, Modal, Upload, Select, DatePicker, Steps, InputNumber, Form } from 'antd';
-import { Edit, Plus, UploadCloud, X, Check, CheckCircle } from 'lucide-react';
+import { Input, Button, Modal, Upload, Select, DatePicker, Steps, InputNumber, Form, message } from 'antd';
+import { Edit, Plus, UploadCloud, X, Check, CheckCircle, Calendar } from 'lucide-react';
 import { createCampaign, uploadCampaignImage } from '@/app/services/campaignService';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
 import dayjs from 'dayjs';
@@ -53,6 +53,9 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
         const values = form.getFieldsValue(fieldsToValidate);
         const hasEmptyFields = fieldsToValidate.some(field => {
             const value = values[field];
+            if (typeof value === 'string') {
+                return !value.trim();
+            }
             return value === undefined || value === null || value === '';
         });
 
@@ -139,7 +142,15 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                         label={<span className="text-white">Campaign Title *</span>}
                         rules={[
                             { required: true, message: 'Please enter campaign title' },
-                            { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' }
+                            { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' },
+                            {
+                                validator: (_, value) => {
+                                    if (value && !value.trim()) {
+                                        return Promise.reject(new Error('Please enter a valid value'));
+                                    }
+                                    return Promise.resolve();
+                                }
+                            }
                         ]}
                     >
                         <Input
@@ -153,7 +164,15 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                         label={<span className="text-white">Description *</span>}
                         rules={[
                             { required: true, message: 'Please enter description' },
-                            { min: 20, max: 300, message: 'Description must be between 20 and 300 characters' }
+                            { min: 20, max: 300, message: 'Description must be between 20 and 300 characters' },
+                            {
+                                validator: (_, value) => {
+                                    if (value && !value.trim()) {
+                                        return Promise.reject(new Error('Please enter a valid value'));
+                                    }
+                                    return Promise.resolve();
+                                }
+                            }
                         ]}
                     >
                         <TextArea
@@ -164,12 +183,12 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     </Form.Item>
                     <Form.Item
                         name="pricePool"
-                        label={<span className="text-white">Price amount *</span>}
+                        label={<span className="text-white">Price Amount *</span>}
                         rules={[{ required: true, message: 'Please enter price amount' }]}
                     >
                         <InputNumber
                             placeholder="Price"
-                            className="!w-full !bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500 input-number-dark"
+                            className="!w-full !bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500"
                             min={0}
                             formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                             parser={(value) => value?.replace(/\D/g, '')}
@@ -188,13 +207,19 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                         <Input />
                     </Form.Item>
 
-                    <Form.Item label={<span className="text-white">Campaign image(Optional)</span>}>
+                    <Form.Item label={<span className="text-white">Campaign Image(Optional)</span>}>
                         <Upload.Dragger
                             className="!bg-[#2e2e48] !border-[#444] !border-dashed hover:!border-purple-500"
                             accept="image/*"
                             showUploadList={true}
                             disabled={uploadLoading}
                             beforeUpload={async (file) => {
+                                const isLt5M = file.size / 1024 / 1024 < 5;
+                                if (!isLt5M) {
+                                    message.error('File size exceeds the maximum limit of 5 MB');
+                                    return Upload.LIST_IGNORE;
+                                }
+
                                 try {
                                     const imgForm = new FormData();
                                     imgForm.append("image", file);
@@ -253,6 +278,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                         <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Campaign start date is required' }]}>
                             <DatePicker
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                suffixIcon={<Calendar className="text-white" size={16} />}
                                 disabledDate={(current) => {
                                     return current && current < dayjs().startOf('day');
                                 }}
@@ -277,6 +303,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                         >
                             <DatePicker
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                suffixIcon={<Calendar className="text-white" size={16} />}
                                 disabledDate={(current) => {
                                     const enrollStart = form.getFieldValue('enrollStartTime');
                                     if (!enrollStart) return current && current < dayjs().startOf('day');
@@ -303,6 +330,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                         >
                             <DatePicker
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                suffixIcon={<Calendar className="text-white" size={16} />}
                                 disabledDate={(current) => {
                                     const reviewStart = form.getFieldValue('reviewStartTime');
                                     if (!reviewStart) return current && current < dayjs().startOf('day');
@@ -329,6 +357,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                         >
                             <DatePicker
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                suffixIcon={<Calendar className="text-white" size={16} />}
                                 disabledDate={(current) => {
                                     const votingStart = form.getFieldValue('votingStartTime');
                                     if (!votingStart) return false;
@@ -356,10 +385,10 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                                     }
                                 ]}
                             >
-                                <Input placeholder="Leave empty for unlimited" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
+                                <InputNumber placeholder="Leave empty for unlimited" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                             </Form.Item>
                             <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age</span>} rules={[{ required: false, message: 'Required' }]}>
-                                <Input placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
+                                <InputNumber placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                             </Form.Item>
                             <Form.Item
                                 name="maxAgeLimit"
@@ -378,7 +407,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                                     }),
                                 ]}
                             >
-                                <Input placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" type="number" />
+                                <InputNumber placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                             </Form.Item>
                         </div>
                     </div>

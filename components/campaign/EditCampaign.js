@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Button, Modal, Form, DatePicker, InputNumber } from 'antd';
-import { Edit, Plus, X } from 'lucide-react';
+import { Edit, Plus, X, Calendar } from 'lucide-react';
 import { updateCampaign } from '@/app/services/campaignService';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
 import dayjs from 'dayjs';
@@ -114,7 +114,15 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                         label={<span className="text-white">Campaign Title</span>}
                         rules={[
                             { required: true, message: 'Please enter campaign title' },
-                            { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' }
+                            { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' },
+                            {
+                                validator: (_, value) => {
+                                    if (value && !value.trim()) {
+                                        return Promise.reject(new Error('Please enter a valid value'));
+                                    }
+                                    return Promise.resolve();
+                                }
+                            }
                         ]}
                     >
                         <Input className="!bg-[#2e2e48] !border-[#444] !text-white" />
@@ -137,7 +145,15 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     label={<span className="text-white">Description</span>}
                     rules={[
                         { required: true, message: 'Please enter description' },
-                        { min: 20, max: 300, message: 'Description must be between 20 and 300 characters' }
+                        { min: 20, max: 300, message: 'Description must be between 20 and 300 characters' },
+                        {
+                            validator: (_, value) => {
+                                if (value && !value.trim()) {
+                                    return Promise.reject(new Error('Please enter a valid value'));
+                                }
+                                return Promise.resolve();
+                            }
+                        }
                     ]}
                 >
                     <TextArea rows={3} className="!bg-[#2e2e48] !border-[#444] !text-white" />
@@ -147,6 +163,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Campaign start date is required' }]}>
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                            suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.enrollStartTime && !dayjs(campaign.enrollStartTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
@@ -169,6 +186,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     >
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                            suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.reviewStartTime && !dayjs(campaign.reviewStartTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
@@ -191,6 +209,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     >
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                            suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.votingStartTime && !dayjs(campaign.votingStartTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
@@ -213,6 +232,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     >
                         <DatePicker
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                            suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.completeTime && !dayjs(campaign.completeTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
@@ -234,10 +254,10 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                             }
                         ]}
                     >
-                        <Input type="number" placeholder="Leave empty for unlimited" className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                        <InputNumber placeholder="Leave empty for unlimited" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
                     <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age</span>} rules={[{ required: false, message: 'Required' }]}>
-                        <Input type="number" placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                        <InputNumber placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
                     <Form.Item
                         name="maxAgeLimit"
@@ -256,7 +276,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                             }),
                         ]}
                     >
-                        <Input type="number" placeholder="No restriction" className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                        <InputNumber placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
                 </div>
 
@@ -292,11 +312,11 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     )}
                 </Form.List>
 
-                <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[#333]">
-                    <Button onClick={onCancel} className="!bg-transparent !border-[#444] !text-white">
+                <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-200">
+                    <Button onClick={onCancel} className="!bg-white !border-gray-300 !text-black !h-11 font-medium">
                         Cancel
                     </Button>
-                    <Button type="primary" htmlType="submit" loading={updateLoading} disabled={!isEditDirty} className="!bg-pink-600 !border-none px-6 shadow-lg shadow-pink-600/20">
+                    <Button type="primary" htmlType="submit" loading={updateLoading} disabled={!isEditDirty} className="!bg-[#0000aa] !border-none !h-11 font-medium hover:!bg-[#0000cc] !text-white disabled:!text-gray-300 disabled:!bg-[#0000aa]/50">
                         Save Changes
                     </Button>
                 </div>
