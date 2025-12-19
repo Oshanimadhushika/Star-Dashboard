@@ -16,6 +16,8 @@ export default function VideoModerationPage() {
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+    const [rejectReason, setRejectReason] = useState("");
 
     useEffect(() => {
         if (selectedVideo) setIsPlaying(false);
@@ -97,20 +99,25 @@ export default function VideoModerationPage() {
     };
 
     const handleReject = (record) => {
-        modal.confirm({
-            title: 'Reject Video',
-            content: 'Are you sure you want to reject this video? It will be hidden from public view.',
-            okText: 'Reject',
-            okType: 'danger',
-            cancelText: 'Cancel',
-            onOk: async () => {
-                const res = await triggerReject({ id: record.id }, { successMsg: "Video rejected successfully!", errorMsg: "Failed to reject video." });
-                if (res?.data?.success) {
-                    setIsModalOpen(false);
-                    fetchVideos();
-                }
-            }
+        setSelectedVideo(record);
+        setRejectReason("");
+        setIsRejectModalOpen(true);
+    };
+
+    const submitReject = async () => {
+        const res = await triggerReject({
+            id: selectedVideo.id,
+            rejectReason: rejectReason
+        }, {
+            successMsg: "Video rejected successfully!",
+            errorMsg: "Failed to reject video."
         });
+
+        if (res?.data?.success) {
+            setIsRejectModalOpen(false);
+            if (isModalOpen) setIsModalOpen(false);
+            fetchVideos();
+        }
     };
 
     const handleDeactivate = (record) => {
@@ -331,13 +338,13 @@ export default function VideoModerationPage() {
                                 </button>
                             </Tooltip>
                         ) : record.status === 'REJECTED' ? (
-                            <Tooltip title={actionable ? "Delete" : "Voting Started"}>
+                            <Tooltip title={actionable ? "Deactivate" : "Voting Started"}>
                                 <button
-                                    onClick={(e) => actionable && handleAction(e, "permanent_delete", record)}
+                                    onClick={(e) => actionable && handleAction(e, "delete", record)}
                                     className={`p-1 rounded transition-colors ${actionable ? "text-red-500 hover:bg-red-50" : "text-gray-300 cursor-not-allowed"}`}
                                     disabled={!actionable}
                                 >
-                                    <Trash2 size={18} />
+                                    <Ban size={18} />
                                 </button>
                             </Tooltip>
                         ) : (
@@ -585,6 +592,17 @@ export default function VideoModerationPage() {
                                                     </Button>
                                                 </>
                                             )}
+
+                                            {selectedVideo.status === 'REJECTED' && (
+                                                <Button
+                                                    danger
+                                                    size="large"
+                                                    onClick={() => handleDeactivate(selectedVideo)}
+                                                    className="w-full flex items-center justify-center gap-2 !bg-[#C5C5C5] !text-gray-600 hover:!bg-gray-200 !border-none !h-12 !text-base rounded-lg font-medium"
+                                                >
+                                                    Deactivate
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -592,6 +610,28 @@ export default function VideoModerationPage() {
                         </div>
                     </div>
                 )}
+            </Modal>
+
+            <Modal
+                title="Reject Video"
+                open={isRejectModalOpen}
+                onCancel={() => setIsRejectModalOpen(false)}
+                okText="Reject"
+                okType="danger"
+                onOk={submitReject}
+                confirmLoading={isLoading}
+                destroyOnHidden
+            >
+                <div className="flex flex-col gap-4">
+                    <p className="text-gray-600">Please provide a reason for rejecting this video:</p>
+                    <Input.TextArea
+                        rows={4}
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        placeholder="Enter rejection reason..."
+                        className="!resize-none"
+                    />
+                </div>
             </Modal>
         </div>
     );
