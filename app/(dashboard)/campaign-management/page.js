@@ -76,21 +76,23 @@ export default function CampaignManagementPage() {
 
     const deriveCampaignStatus = (campaign) => {
         const now = dayjs();
-        const reviewStart = dayjs(campaign.reviewStartTime);
-        const votingStart = dayjs(campaign.votingStartTime);
+        // const reviewStart = dayjs(campaign.reviewStartTime);
+        // const votingStart = dayjs(campaign.votingStartTime);
         const complete = dayjs(campaign.completeTime);
         const enrollStart = dayjs(campaign.enrollStartTime);
 
-        if (now.isAfter(complete)) return 'Completed';
-        if (now.isAfter(votingStart) && now.isBefore(complete)) return 'Voting Started';
-        if (now.isAfter(reviewStart) && now.isBefore(votingStart)) return 'In Review';
+        // if (now.isAfter(complete)) return 'Completed';
+        // if (now.isAfter(votingStart) && now.isBefore(complete)) return 'Voting Started';
+        // if (now.isAfter(reviewStart) && now.isBefore(votingStart)) return 'In Review';
+        // if (now.isBefore(enrollStart)) return 'Upcoming';
         if (now.isBefore(enrollStart)) return 'Upcoming';
+        if (now.isAfter(complete)) return 'Completed';
         return 'Active';
     };
 
     const getStatusBadge = (status) => {
         let styles = "";
-        const formattedStatus = status; // Status is already formatted from deriveCampaignStatus
+        const formattedStatus = status;
 
         switch (formattedStatus) {
             case "In Review":
