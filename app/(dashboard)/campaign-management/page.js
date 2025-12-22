@@ -79,14 +79,13 @@ export default function CampaignManagementPage() {
         const reviewStart = dayjs(campaign.reviewStartTime);
         const votingStart = dayjs(campaign.votingStartTime);
         const complete = dayjs(campaign.completeTime);
+        const enrollStart = dayjs(campaign.enrollStartTime);
 
         if (now.isAfter(complete)) return 'Completed';
         if (now.isAfter(votingStart) && now.isBefore(complete)) return 'Voting Started';
         if (now.isAfter(reviewStart) && now.isBefore(votingStart)) return 'In Review';
-
-        // Fallbacks for other periods
-        if (now.isBefore(reviewStart)) return 'Upcoming';
-        return 'Unknown';
+        if (now.isBefore(enrollStart)) return 'Upcoming';
+        return 'Active';
     };
 
     const getStatusBadge = (status) => {
@@ -105,6 +104,9 @@ export default function CampaignManagementPage() {
                 break;
             case "Upcoming":
                 styles = "bg-blue-100 text-blue-600 border-blue-600";
+                break;
+            case "Active":
+                styles = "bg-green-100 text-green-600 border-green-600";
                 break;
             default:
                 styles = "bg-gray-100 text-gray-600 border-gray-600";
