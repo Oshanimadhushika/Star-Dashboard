@@ -74,69 +74,115 @@ export default function CampaignManagementPage() {
         setIsLeaderboardOpen(true);
     };
 
-    const CampaignCard = ({ data }) => (
-        <div className="bg-[#f2f2f2] p-6 rounded-xl flex flex-col justify-between h-full">
-            <div>
-                <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-3">
-                        {data.campaignImageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={data.campaignImageUrl} alt={data.title} className="w-12 h-12 rounded-lg object-cover" />
-                        ) : (
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${data.iconColor}`}>
-                                <Trophy size={20} />
-                            </div>
-                        )}
-                        <h3 className="font-semibold text-lg line-clamp-1" title={data.title}>{data.title}</h3>
+    const deriveCampaignStatus = (campaign) => {
+        const now = dayjs();
+        const reviewStart = dayjs(campaign.reviewStartTime);
+        const votingStart = dayjs(campaign.votingStartTime);
+        const complete = dayjs(campaign.completeTime);
+
+        if (now.isAfter(complete)) return 'Completed';
+        if (now.isAfter(votingStart) && now.isBefore(complete)) return 'Voting Started';
+        if (now.isAfter(reviewStart) && now.isBefore(votingStart)) return 'In Review';
+
+        // Fallbacks for other periods
+        if (now.isBefore(reviewStart)) return 'Upcoming';
+        return 'Unknown';
+    };
+
+    const getStatusBadge = (status) => {
+        let styles = "";
+        const formattedStatus = status; // Status is already formatted from deriveCampaignStatus
+
+        switch (formattedStatus) {
+            case "In Review":
+                styles = "bg-green-100 text-green-600 border-green-600";
+                break;
+            case "Voting Started":
+                styles = "bg-orange-100 text-orange-600 border-orange-600";
+                break;
+            case "Completed":
+                styles = "bg-purple-100 text-purple-600 border-purple-600";
+                break;
+            case "Upcoming":
+                styles = "bg-blue-100 text-blue-600 border-blue-600";
+                break;
+            default:
+                styles = "bg-gray-100 text-gray-600 border-gray-600";
+        }
+        return (
+            <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${styles}`}>
+                {formattedStatus}
+            </span>
+        );
+    };
+
+    const CampaignCard = ({ data }) => {
+        const status = deriveCampaignStatus(data);
+
+        return (
+            <div className="bg-[#f2f2f2] p-6 rounded-xl flex flex-col justify-between h-full">
+                <div>
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="flex items-center gap-3">
+                            {data.campaignImageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={data.campaignImageUrl} alt={data.title} className="w-12 h-12 rounded-lg object-cover" />
+                            ) : (
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${data.iconColor}`}>
+                                    <Trophy size={20} />
+                                </div>
+                            )}
+                            <h3 className="font-semibold text-lg line-clamp-1" title={data.title}>
+                                {data.title?.length > 10 ? `${data.title.slice(0, 10)}...` : data.title}
+                            </h3>
+                        </div>
+                        {getStatusBadge(status)}
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${data.statusColor}`}>
-                        {data.status}
-                    </span>
+
+                    <div className="mb-6">
+                        <p className="text-gray-400 text-xs mb-1">Duration</p>
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                            <Calendar size={16} />
+                            <span>{data.enrollStartTime ? dayjs(data.enrollStartTime).format('YYYY-MM-DD') : 'N/A'} - {data.completeTime ? dayjs(data.completeTime).format('YYYY-MM-DD') : 'N/A'}</span>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-4 flex justify-between items-center mb-6">
+                        <div className="text-center">
+                            <div className="text-pink-500 flex justify-center mb-1"><Users size={18} /></div>
+                            <div className="font-bold text-lg">{data.enrolledCount || 0}</div>
+                            <div className="text-xs text-gray-400">Participants</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-purple-500 flex justify-center mb-1"><Video size={18} /></div>
+                            <div className="font-bold text-lg">{data.videosCount || 0}</div>
+                            <div className="text-xs text-gray-400">Videos</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-orange-500 flex justify-center mb-1"><Award size={18} /></div>
+                            <div className="font-bold text-lg">{data.votesCount || 0}</div>
+                            <div className="text-xs text-gray-400">Votes</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="mb-6">
-                    <p className="text-gray-400 text-xs mb-1">Duration</p>
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                        <Calendar size={16} />
-                        <span>{data.enrollStartTime ? dayjs(data.enrollStartTime).format('YYYY-MM-DD') : 'N/A'} - {data.completeTime ? dayjs(data.completeTime).format('YYYY-MM-DD') : 'N/A'}</span>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-4 flex justify-between items-center mb-6">
-                    <div className="text-center">
-                        <div className="text-pink-500 flex justify-center mb-1"><Users size={18} /></div>
-                        <div className="font-bold text-lg">{data.maxParticipants || "∞"}</div>
-                        <div className="text-xs text-gray-400">Participants</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-purple-500 flex justify-center mb-1"><Video size={18} /></div>
-                        <div className="font-bold text-lg">0</div>
-                        <div className="text-xs text-gray-400">Videos</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-orange-500 flex justify-center mb-1"><Award size={18} /></div>
-                        <div className="font-bold text-lg">0</div>
-                        <div className="text-xs text-gray-400">Votes</div>
-                    </div>
+                <div className="flex gap-3 mt-auto">
+                    <Button
+                        onClick={() => handleLeaderboard(data)}
+                        className="flex-1 !bg-[#333] !text-white hover:!bg-[#444] !border-none h-10 flex items-center justify-center gap-2"
+                    >
+                        <Eye size={16} /> LeaderBoard
+                    </Button>
+                    <Button
+                        onClick={() => handleEdit(data)}
+                        className="!bg-[#b30000] !text-white hover:!bg-[#cc0000] !border-none h-10 px-6 font-medium"
+                    >
+                        Edit
+                    </Button>
                 </div>
             </div>
-
-            <div className="flex gap-3 mt-auto">
-                <Button
-                    onClick={() => handleLeaderboard(data)}
-                    className="flex-1 !bg-[#333] !text-white hover:!bg-[#444] !border-none h-10 flex items-center justify-center gap-2"
-                >
-                    <Eye size={16} /> LeaderBoard
-                </Button>
-                <Button
-                    onClick={() => handleEdit(data)}
-                    className="!bg-[#b30000] !text-white hover:!bg-[#cc0000] !border-none h-10 px-6 font-medium"
-                >
-                    Edit
-                </Button>
-            </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="min-h-screen bg-white">
@@ -176,24 +222,15 @@ export default function CampaignManagementPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {fetchedCampaigns.map(campaign => {
-                    let statusColor = 'text-gray-600 bg-gray-100';
-                    switch (campaign.status) {
-                        case 'Active': statusColor = 'text-green-600 bg-green-100'; break;
-                        case 'Upcoming': statusColor = 'text-blue-600 bg-blue-100'; break;
-                        case 'Completed': statusColor = 'text-gray-600 bg-gray-100'; break;
-                    }
-                    return (
-                        <CampaignCard
-                            key={campaign.id}
-                            data={{
-                                ...campaign,
-                                statusColor,
-                                iconColor: 'bg-purple-100 text-purple-500'
-                            }}
-                        />
-                    );
-                })}
+                {fetchedCampaigns.map(campaign => (
+                    <CampaignCard
+                        key={campaign.id}
+                        data={{
+                            ...campaign,
+                            iconColor: 'bg-purple-100 text-purple-500'
+                        }}
+                    />
+                ))}
             </div>
 
             {pagination.total > pagination.pageSize && (

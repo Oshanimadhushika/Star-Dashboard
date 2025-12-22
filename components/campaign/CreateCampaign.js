@@ -277,6 +277,8 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     <div className="grid grid-cols-2 gap-4">
                         <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Campaign start date is required' }]}>
                             <DatePicker
+                                showTime
+                                format="YYYY-MM-DD HH:mm"
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
                                 suffixIcon={<Calendar className="text-white" size={16} />}
                                 disabledDate={(current) => {
@@ -302,6 +304,8 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                             ]}
                         >
                             <DatePicker
+                                showTime
+                                format="YYYY-MM-DD HH:mm"
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
                                 suffixIcon={<Calendar className="text-white" size={16} />}
                                 disabledDate={(current) => {
@@ -329,6 +333,8 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                             ]}
                         >
                             <DatePicker
+                                showTime
+                                format="YYYY-MM-DD HH:mm"
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
                                 suffixIcon={<Calendar className="text-white" size={16} />}
                                 disabledDate={(current) => {
@@ -356,6 +362,8 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                             ]}
                         >
                             <DatePicker
+                                showTime
+                                format="YYYY-MM-DD HH:mm"
                                 className="w-full !bg-[#2e2e48] !border-[#444] !text-white"
                                 suffixIcon={<Calendar className="text-white" size={16} />}
                                 disabledDate={(current) => {
@@ -385,10 +393,30 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                                     }
                                 ]}
                             >
-                                <InputNumber placeholder="Leave empty for unlimited" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                                <InputNumber
+                                    placeholder="Leave empty for unlimited"
+                                    className="!w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                    min={1}
+                                    parser={(value) => value?.replace(/\D/g, '')}
+                                    onKeyPress={(event) => {
+                                        if (!/[0-9]/.test(event.key)) {
+                                            event.preventDefault();
+                                        }
+                                    }}
+                                />
                             </Form.Item>
                             <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age</span>} rules={[{ required: false, message: 'Required' }]}>
-                                <InputNumber placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                                <InputNumber
+                                    placeholder="No restriction"
+                                    className="!w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                    min={0}
+                                    parser={(value) => value?.replace(/\D/g, '')}
+                                    onKeyPress={(event) => {
+                                        if (!/[0-9]/.test(event.key)) {
+                                            event.preventDefault();
+                                        }
+                                    }}
+                                />
                             </Form.Item>
                             <Form.Item
                                 name="maxAgeLimit"
@@ -407,7 +435,17 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                                     }),
                                 ]}
                             >
-                                <InputNumber placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                                <InputNumber
+                                    placeholder="No restriction"
+                                    className="!w-full !bg-[#2e2e48] !border-[#444] !text-white"
+                                    min={0}
+                                    parser={(value) => value?.replace(/\D/g, '')}
+                                    onKeyPress={(event) => {
+                                        if (!/[0-9]/.test(event.key)) {
+                                            event.preventDefault();
+                                        }
+                                    }}
+                                />
                             </Form.Item>
                         </div>
                     </div>
@@ -460,16 +498,16 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                         <h4 className="font-semibold mb-2">Schedule & Settings</h4>
                         <div className="grid grid-cols-2 gap-y-2 text-sm">
                             <div className="text-gray-400">Campaign Start Date</div>
-                            <div className="text-right">{formData.enrollStartTime ? dayjs(formData.enrollStartTime).format('YYYY-MM-DD') : 'Not set'}</div>
+                            <div className="text-right">{formData.enrollStartTime ? dayjs(formData.enrollStartTime).format('YYYY-MM-DD HH:mm') : 'Not set'}</div>
 
                             <div className="text-gray-400">Review Start Date</div>
-                            <div className="text-right">{formData.reviewStartTime ? dayjs(formData.reviewStartTime).format('YYYY-MM-DD') : 'Not set'}</div>
+                            <div className="text-right">{formData.reviewStartTime ? dayjs(formData.reviewStartTime).format('YYYY-MM-DD HH:mm') : 'Not set'}</div>
 
                             <div className="text-gray-400">Voting Start Date</div>
-                            <div className="text-right">{formData.votingStartTime ? dayjs(formData.votingStartTime).format('YYYY-MM-DD') : 'Not set'}</div>
+                            <div className="text-right">{formData.votingStartTime ? dayjs(formData.votingStartTime).format('YYYY-MM-DD HH:mm') : 'Not set'}</div>
 
                             <div className="text-gray-400">Complete Date</div>
-                            <div className="text-right">{formData.completeTime ? dayjs(formData.completeTime).format('YYYY-MM-DD') : 'Not set'}</div>
+                            <div className="text-right">{formData.completeTime ? dayjs(formData.completeTime).format('YYYY-MM-DD HH:mm') : 'Not set'}</div>
                         </div>
                     </div>
 
