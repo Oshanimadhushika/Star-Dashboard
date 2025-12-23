@@ -3,75 +3,33 @@ import React, { useState } from 'react';
 import { Input } from 'antd';
 import { Search, Trophy } from 'lucide-react';
 import WinnersModal from '@/components/winners/WinnersModal';
+import CustomPagination from '@/components/CustomPagination';
 
-import { getLatestWinner } from '@/app/services/winnerService';
+
+import { getLatestWinner, getAllCampaignWinners } from '@/app/services/winnerService';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
+import useDebounce from '@/app/hooks/useDebounce';
 import { Spin } from 'antd';
 import dayjs from 'dayjs';
 
-// Mock Data
-const MOCK_CAMPAIGNS = [
-    {
-        id: 1,
-        title: "Voice Teens",
-        winner: "Sarah Johnson",
-        votes: 67890,
-        prize: "$4,000",
-        endedDate: "2025-05-31",
-        participants: 456,
-        color: "bg-[#ec4899]",
-        winners: [
-            { name: "Sarah Johnson", song: "Shape of You - Amazing", votes: 52768, views: 1879, avatar: null },
-            { name: "Mike T", song: "Perfect", votes: 45200, views: 1600, avatar: null },
-            { name: "Jessica L", song: "Halo", votes: 41000, views: 1550, avatar: null }
-        ],
-        otherParticipants: [
-            { rank: 4, name: "David M", song: "All of Me", votes: 38000, views: 1400, avatar: null },
-            { rank: 5, name: "Emily R", song: "Rolling in the Deep", votes: 35000, views: 1350, avatar: null },
-            { rank: 6, name: "Chris P", song: "Godzilla", votes: 32000, views: 1200, avatar: null }
-        ]
-    },
-    {
-        id: 2,
-        title: "Winter Voice 2024",
-        winner: "Michael Chen",
-        votes: 45300,
-        prize: "$4,000",
-        endedDate: "2024-12-20",
-        participants: 320,
-        color: "bg-[#3b82f6]",
-        winners: [
-            { name: "Michael Chen", song: "Last Christmas", votes: 45300, views: 2100, avatar: null },
-            { name: "Sarah W", song: "Jingle Bells", votes: 40000, views: 1900, avatar: null },
-            { name: "John D", song: "Silent Night", votes: 35000, views: 1700, avatar: null }
-        ],
-        otherParticipants: []
-    },
-    {
-        id: 3,
-        title: "Rap Battle Royale",
-        winner: "Alex Rivera",
-        votes: 89000,
-        prize: "$5,000",
-        endedDate: "2024-11-15",
-        participants: 500,
-        color: "bg-[#9333ea]",
-        winners: [
-            { name: "Alex Rivera", song: "Lose Yourself", votes: 89000, views: 5000, avatar: null },
-            { name: "Chris P", song: "Godzilla", votes: 80000, views: 4500, avatar: null },
-            { name: "Tom H", song: "Stan", votes: 75000, views: 4000, avatar: null }
-        ],
-        otherParticipants: []
-    }
-];
+const COLORS = ["bg-[#ec4899]", "bg-[#3b82f6]", "bg-[#9333ea]", "bg-[#f97316]", "bg-[#10b981]"];
 
 export default function WinnersPage() {
     const [selectedCampaign, setSelectedCampaign] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [latestWinner, setLatestWinner] = useState(null);
 
+    // Campaign List State
+    const [campaigns, setCampaigns] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const debouncedSearch = useDebounce(search, 500);
+
     const { trigger: fetchLatestWinner, loading: isLatestWinnerLoading } = useLazyFetch(getLatestWinner);
 
+    // Fetch Latest Winner
     React.useEffect(() => {
         const loadLatestWinner = async () => {
             const res = await fetchLatestWinner();
@@ -82,9 +40,34 @@ export default function WinnersPage() {
         loadLatestWinner();
     }, []);
 
+    // Fetch All Campaign Winners
+    React.useEffect(() => {
+        const fetchCampaigns = async () => {
+            setLoading(true);
+            try {
+                const response = await getAllCampaignWinners(page, 10, debouncedSearch);
+                if (response.data.success) {
+                    setCampaigns(response.data.data.data);
+                    setTotal(response.data.data.total);
+                }
+            } catch (error) {
+                console.error("Failed to fetch campaigns", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCampaigns();
+    }, [page, debouncedSearch]);
+
     const handleRowClick = (campaign) => {
         setSelectedCampaign(campaign);
         setIsModalOpen(true);
+    };
+
+    const handleSearchChange = (e) => {
+        setSearch(e.target.value);
+        setPage(1);
     };
 
     return (
@@ -123,7 +106,7 @@ export default function WinnersPage() {
                         </div>
                         <div className="text-left md:text-right w-full md:w-auto">
                             <p className="text-gray-500 text-sm mb-1 font-medium">Prize amount</p>
-                            <p className="text-3xl font-extrabold text-gray-800">{latestWinner.campaign?.pricePool ? `$${latestWinner.campaign.pricePool}` : 'N/A'}</p>
+                            <p className="text-3xl font-extrabold text-gray-800">{latestWinner.campaign?.pricePool ? `$${latestWinner.campaign.pricePool.toLocaleString()}` : 'N/A'}</p>
                         </div>
                     </>
                 ) : (
@@ -224,48 +207,70 @@ export default function WinnersPage() {
             <div className="bg-gray-100 p-2.5 rounded-xl mb-6 max-w-full">
                 <Input
                     prefix={<Search className="text-gray-400 mr-2" size={20} />}
-                    placeholder="Search by email username"
+                    placeholder="Search by campaign title..."
                     className="!bg-transparent !border-none !shadow-none placeholder-gray-500 text-base py-1"
+                    value={search}
+                    onChange={handleSearchChange}
                 />
             </div>
 
             <div className="flex flex-col gap-4 pb-10">
-                {MOCK_CAMPAIGNS.map((campaign) => (
-                    <div
-                        key={campaign.id}
-                        onClick={() => handleRowClick(campaign)}
-                        className="bg-white p-5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col md:flex-row items-center justify-between cursor-pointer hover:shadow-lg hover:border-blue-100 transition-all group duration-300 gap-4"
-                    >
-                        <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
-                            <div className={`w-12 h-12 rounded-full ${campaign.color} flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-110 transition-transform duration-300 shrink-0`}>
-                                {campaign.id}
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-black text-lg mb-1">{campaign.title}</h4>
-                                <div className="text-gray-500 text-sm flex flex-wrap items-center gap-2 md:gap-3">
-                                    <span className="font-medium whitespace-nowrap">Winner : <span className="text-black font-semibold">{campaign.winner}</span></span>
-                                    <span className="hidden md:block w-1 h-1 rounded-full bg-gray-300"></span>
-                                    <span className="flex items-center gap-1.5 text-orange-500 font-bold bg-orange-50 px-2 py-0.5 rounded-full text-xs whitespace-nowrap">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
-                                        {campaign.votes.toLocaleString()} votes
-                                    </span>
+                {loading ? (
+                    <div className="text-center py-10">
+                        <Spin size="large" />
+                    </div>
+                ) : campaigns.length > 0 ? (
+                    <>
+                        {campaigns.map((campaign, index) => (
+                            <div
+                                key={campaign.campaignId}
+                                onClick={() => handleRowClick(campaign)}
+                                className="bg-white p-5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col md:flex-row items-center justify-between cursor-pointer hover:shadow-lg hover:border-blue-100 transition-all group duration-300 gap-4"
+                            >
+                                <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
+                                    <div className={`w-12 h-12 rounded-full ${COLORS[index % COLORS.length]} flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-110 transition-transform duration-300 shrink-0`}>
+                                        {index + 1 + ((page - 1) * 10)}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-black text-lg mb-1">{campaign.title}</h4>
+                                        <div className="text-gray-500 text-sm flex flex-wrap items-center gap-2 md:gap-3">
+                                            <span className="font-medium whitespace-nowrap">Winner : <span className="text-black font-semibold">{campaign.winner?.user || 'N/A'}</span></span>
+                                            <span className="hidden md:block w-1 h-1 rounded-full bg-gray-300"></span>
+                                            <span className="flex items-center gap-1.5 text-orange-500 font-bold bg-orange-50 px-2 py-0.5 rounded-full text-xs whitespace-nowrap">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                                                {campaign.winner?.votesCount?.toLocaleString() || 0} votes
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-left md:text-right flex flex-col items-start md:items-end gap-1 w-full md:w-auto pl-0 md:pl-0 mt-2 md:mt-0">
+                                    <div className="bg-[#fff7ed] text-[#ea580c] px-3 py-1 rounded-lg text-sm font-bold border border-[#ffedd5] inline-block shadow-sm">
+                                        {campaign.pricePool ? `$${campaign.pricePool.toLocaleString()}` : '$0'}
+                                    </div>
+                                    <p className="text-gray-400 text-xs font-medium">{campaign.completedAt ? dayjs(campaign.completedAt).format('YYYY-MM-DD') : 'Date N/A'}</p>
                                 </div>
                             </div>
-                        </div>
-                        <div className="text-left md:text-right flex flex-col items-start md:items-end gap-1 w-full md:w-auto pl-0 md:pl-0 mt-2 md:mt-0">
-                            <div className="bg-[#fff7ed] text-[#ea580c] px-3 py-1 rounded-lg text-sm font-bold border border-[#ffedd5] inline-block shadow-sm">
-                                {campaign.prize}
+                        ))}
+                        {total > 10 && (
+                            <div className="mt-4 flex justify-end">
+                                <CustomPagination
+                                    current={page}
+                                    total={total}
+                                    pageSize={10}
+                                    onChange={(newPage) => setPage(newPage)}
+                                />
                             </div>
-                            <p className="text-gray-400 text-xs font-medium">{campaign.endedDate}</p>
-                        </div>
-                    </div>
-                ))}
+                        )}
+                    </>
+                ) : (
+                    <div className="text-center py-10 text-gray-500">No campaigns found</div>
+                )}
             </div>
 
             <WinnersModal
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
-                data={selectedCampaign}
+                campaignId={selectedCampaign?.campaignId}
             />
         </div>
     );
