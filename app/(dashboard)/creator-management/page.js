@@ -198,7 +198,7 @@ export default function CreatorManagementPage() {
                     footer={null}
                     width={800}
                     centered
-                    destroyOnClose
+                    destroyOnHidden
                     closeIcon={<X size={20} className="text-gray-500" />}
                     className="custom-modal"
                     styles={{

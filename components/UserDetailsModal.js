@@ -1,10 +1,19 @@
 "use client";
 import React from "react";
 import { Modal, Tabs, Button, Avatar, Input, Tag } from "antd";
-import { UserOutlined, WarningOutlined, StopOutlined } from "@ant-design/icons";
+import { UserOutlined, StopOutlined, WarningOutlined, CheckCircleOutlined, CrownFilled } from "@ant-design/icons";
+import dayjs from "dayjs";
 
-const UserDetailsModal = ({ open, onClose, user }) => {
+const UserDetailsModal = ({ open, onClose, user, onBan, onActivate }) => {
     if (!user) return null;
+
+    const getSubscriptionStyle = (sub) => {
+        const s = (sub || "").toLowerCase();
+        if (s === 'gold') return "border-yellow-500 text-yellow-500 bg-yellow-50";
+        if (s === 'silver') return "border-slate-300 text-slate-700 bg-slate-100";
+        if (s === 'platinum') return "border-purple-200 text-purple-700 bg-purple-50";
+        return "border-gray-200 text-gray-600 bg-gray-100";
+    };
 
     return (
         <Modal
@@ -25,15 +34,15 @@ const UserDetailsModal = ({ open, onClose, user }) => {
                         icon={<UserOutlined />}
                         src={user.avatar || null}
                         className="bg-[#C00F75]"
-                        style={{ backgroundColor: '#C00F75' }} // Matching the pink/purple color in image
+                        style={{ backgroundColor: '#C00F75' }}
                     />
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 m-0">{user.name}</h2>
-                        <p className="text-gray-500 m-0">@{user.name.toLowerCase().replace(/\s/g, '_')}</p>
+                        <p className="text-gray-500 m-0">@{user.userName}</p>
                         <div className="mt-2">
-                            <Tag color="gold" className="border-none px-3 py-0.5 rounded-md text-yellow-700 bg-yellow-100 font-medium">
-                                👑 {user.subscription || "Gold"}
-                            </Tag>
+                            <span className={`flex items-center w-fit p-1  px-2 rounded-lg font-medium border capitalize ${getSubscriptionStyle(user.subscription)}`}>
+                                <CrownFilled className="mr-1" /> {user.subscription || "Free"}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -60,96 +69,108 @@ const UserDetailsModal = ({ open, onClose, user }) => {
                                     <div>
                                         <label className="block text-xs text-gray-500 mb-1">Mobile Number</label>
                                         <div className="bg-gray-50 p-3 rounded-lg text-gray-700 font-medium">
-                                            {user.mobile || "0768888888"}
+                                            {user.mobile || "N/A"}
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-xs text-gray-500 mb-1">User Name</label>
                                         <div className="bg-gray-50 p-3 rounded-lg text-gray-700 font-medium">
-                                            @{user.name.toLowerCase().replace(/\s/g, '_')}
+                                            @{user.userName}
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-xs text-gray-500 mb-1">Member Since</label>
                                         <div className="bg-gray-50 p-3 rounded-lg text-gray-700 font-medium">
-                                            {user.joined || "November 25, 2025"}
+                                            {user.joinedAt ? dayjs(user.joinedAt).format('MM/DD/YYYY') : "N/A"}
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-xs text-gray-500 mb-1">Last active</label>
                                         <div className="bg-gray-50 p-3 rounded-lg text-gray-700 font-medium">
-                                            {user.lastActive || "11/25/2025"}
+                                            {user.lastActive ? dayjs(user.lastActive).format('MM/DD/YYYY') : "N/A"}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="mb-8">
+                                {/* <div className="mb-8">
                                     <h3 className="text-lg font-bold mb-4">Subscription Tier</h3>
                                     <div className="grid grid-cols-4 gap-4">
                                         {['Free', 'Silver', 'Gold', 'Platinum'].map((tier) => {
-                                            const isActive = (user.subscription || "Gold") === tier;
+                                            const userSub = user?.subscription ? String(user.subscription) : "Free";
+                                            const isActive = userSub.toLowerCase() === tier.toLowerCase();
+
+                                            let activeClass = "";
+                                            if (tier === 'Gold') activeClass = "border-yellow-200 text-yellow-700 bg-yellow-50";
+                                            else if (tier === 'Silver') activeClass = "border-slate-300 text-slate-700 bg-slate-100";
+                                            else if (tier === 'Platinum') activeClass = "border-purple-200 text-purple-700 bg-purple-50";
+                                            else activeClass = "border-gray-200 text-gray-600 bg-white";
+
+                                            const finalClass = isActive
+                                                ? activeClass
+                                                : "border-gray-100 text-gray-400 bg-gray-50 opacity-60";
+
                                             return (
                                                 <div
                                                     key={tier}
-                                                    className={`
-                            text-center py-3 rounded-lg font-medium border
-                            ${isActive
-                                                            ? 'border-purple-200 text-purple-700 bg-purple-50'
-                                                            : 'border-gray-100 text-gray-600 bg-white'}
-                          `}
+                                                    className={`text-center py-3 rounded-lg font-medium border ${finalClass}`}
                                                 >
                                                     {tier}
                                                 </div>
                                             );
                                         })}
                                     </div>
-                                </div>
+                                </div> */}
 
                                 <div>
                                     <h3 className="text-lg font-bold mb-4">Account Actions</h3>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Button
-                                            className="!h-12 !bg-amber-100 !text-amber-700 !border-none hover:!bg-amber-200 flex items-center justify-center gap-2 font-medium"
-                                            block
-                                        >
-                                            <WarningOutlined /> Approve Creator
-                                        </Button>
-                                        <Button
-                                            className="!h-12 !bg-red-400 !text-white !border-none hover:!bg-red-500 flex items-center justify-center gap-2 font-medium"
-                                            block
-                                            danger // keeping danger prop for semantics, though style is overridden
-                                        >
-                                            <StopOutlined /> Ban User
-                                        </Button>
+                                    <div className="flex flex-col gap-4">
+                                        {user?.status === 'BANNED' || user?.status === 'BLOCKED' ? (
+                                            <Button
+                                                className="!h-12 !bg-[#00D222] !text-white !border-none hover:!bg-[#00D222]/80 flex items-center justify-center gap-2 font-medium"
+                                                block
+                                                onClick={() => onActivate(user)}
+                                            >
+                                                <CheckCircleOutlined /> Active User
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                className="!h-12 !bg-red-400 !text-white !border-none hover:!bg-red-500 flex items-center justify-center gap-2 font-medium"
+                                                block
+                                                danger
+                                                onClick={() => onBan(user)}
+                                            >
+                                                <StopOutlined /> Ban User
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         ),
                     },
-                    {
-                        key: 'activity',
-                        label: 'Activity',
-                        children: (
-                            <div className="py-8 text-center text-gray-500">
-                                <p>Activity content loading...</p>
-                                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                                    <p>Recent logins, page views, and interactions will be listed here.</p>
-                                </div>
-                            </div>
-                        ),
-                    },
-                    {
-                        key: 'subscription',
-                        label: 'Subscription',
-                        children: (
-                            <div className="py-8 text-center text-gray-500">
-                                <p>Subscription history loading...</p>
-                                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                                    <p>Invoices, payment methods, and billing history.</p>
-                                </div>
-                            </div>
-                        ),
-                    },
+                    // {
+                    //     key: 'activity',
+                    //     label: 'Activity',
+                    //     children: (
+                    //         <div className="py-8 text-center text-gray-500">
+                    //             <p>Activity content loading...</p>
+                    //             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    //                 <p>Recent logins, page views, and interactions will be listed here.</p>
+                    //             </div>
+                    //         </div>
+                    //     ),
+                    // },
+                    // {
+                    //     key: 'subscription',
+                    //     label: 'Subscription',
+                    //     children: (
+                    //         <div className="py-8 text-center text-gray-500">
+                    //             <p>Subscription history loading...</p>
+                    //             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    //                 <p>Invoices, payment methods, and billing history.</p>
+                    //             </div>
+                    //         </div>
+                    //     ),
+                    // },
                 ]}
             />
 
