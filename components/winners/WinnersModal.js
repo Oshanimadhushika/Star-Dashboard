@@ -3,7 +3,6 @@ import { Modal, Avatar, Spin } from 'antd';
 import { X, Trophy, Eye, Heart } from 'lucide-react';
 import CustomPagination from '@/components/CustomPagination';
 import { getCampaignTopWinners, getOtherCampaignParticipants } from '@/app/services/winnerService';
-import CMSVideoModal from '@/components/CMSVideoModal';
 
 export default function WinnersModal({ open, onCancel, campaignId }) {
     const [loading, setLoading] = useState(false);
@@ -12,16 +11,6 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
     const [topWinners, setTopWinners] = useState({ firstWinner: {}, secondWinner: {}, thirdWinner: {} });
     const [otherParticipants, setOtherParticipants] = useState([]);
     const [pagination, setPagination] = useState({ page: 1, perPage: 10, total: 0 });
-    const [videoModalOpen, setVideoModalOpen] = useState(false);
-    const [selectedVideo, setSelectedVideo] = useState(null);
-
-    const handleVideoClick = (video, e) => {
-        if (e) e.stopPropagation();
-        if (video) {
-            setSelectedVideo(video);
-            setVideoModalOpen(true);
-        }
-    };
 
     useEffect(() => {
         if (open && campaignId) {
@@ -124,10 +113,7 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                             {/* Second Winner */}
                             <div className="flex flex-col items-center relative z-10 w-44">
                                 <div className="relative mb-3">
-                                    <div
-                                        className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-[#9ca3af] cursor-pointer hover:opacity-90 transition-opacity"
-                                        onClick={(e) => handleVideoClick(secondWinner, e)}
-                                    >
+                                    <div className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-[#9ca3af]">
                                         <Avatar size={72} src={getAvatarSrc(secondWinner?.profilePicture)} className="bg-[#9ca3af] text-xl font-bold">{secondWinner?.user ? secondWinner.user.substring(0, 2).toUpperCase() : "NA"}</Avatar>
                                     </div>
                                     <div className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 w-8 h-8 rounded-full bg-[#64748b] border-2 border-white flex items-center justify-center text-white font-bold text-sm shadow-sm z-20">
@@ -156,10 +142,7 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                             {/* First Winner */}
                             <div className="flex flex-col items-center relative z-20 w-52 -mt-10">
                                 <div className="relative mb-3">
-                                    <div
-                                        className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-[#fbbf24] cursor-pointer hover:opacity-90 transition-opacity"
-                                        onClick={(e) => handleVideoClick(firstWinner, e)}
-                                    >
+                                    <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-[#fbbf24]">
                                         <Avatar size={88} src={getAvatarSrc(firstWinner?.profilePicture)} className="bg-[#fbbf24] text-3xl font-bold text-white">{firstWinner?.user ? firstWinner.user.substring(0, 2).toUpperCase() : "NA"}</Avatar>
                                     </div>
                                     <div className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 w-10 h-10 rounded-full bg-[#fbbf24] border-2 border-white flex items-center justify-center text-white shadow-sm z-20">
@@ -193,10 +176,7 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                             {/* Third Winner */}
                             <div className="flex flex-col items-center relative z-10 w-44">
                                 <div className="relative mb-3">
-                                    <div
-                                        className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-[#ef4444] cursor-pointer hover:opacity-90 transition-opacity"
-                                        onClick={(e) => handleVideoClick(thirdWinner, e)}
-                                    >
+                                    <div className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-[#ef4444]">
                                         <Avatar size={72} src={getAvatarSrc(thirdWinner?.profilePicture)} className="bg-[#ef4444] text-xl font-bold text-white">{thirdWinner?.user ? thirdWinner.user.substring(0, 2).toUpperCase() : "NA"}</Avatar>
                                     </div>
                                     <div className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 w-8 h-8 rounded-full bg-[#ef4444] border-2 border-white flex items-center justify-center text-white font-bold text-sm shadow-sm z-20">
@@ -233,11 +213,7 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                                 <>
                                     <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                         {otherParticipants && otherParticipants.length > 0 ? otherParticipants.map((p, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all cursor-pointer hover:border-blue-100"
-                                                onClick={(e) => handleVideoClick(p, e)}
-                                            >
+                                            <div key={index} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-10 h-10 bg-[#f1f5f9] text-[#94a3b8] rounded-xl flex items-center justify-center font-bold text-sm">
                                                         #{((pagination.page - 1) * pagination.perPage) + index + 4}
@@ -305,13 +281,6 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                 }
             `}</style>
-
-            <CMSVideoModal
-                open={videoModalOpen}
-                onCancel={() => setVideoModalOpen(false)}
-                videoUrl={selectedVideo?.videoUrl}
-                title={selectedVideo?.title}
-            />
         </Modal>
     );
 }
