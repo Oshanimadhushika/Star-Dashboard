@@ -159,7 +159,7 @@ export default function CampaignManagementPage() {
                         </div>
                         <div className="text-center">
                             <div className="text-purple-500 flex justify-center mb-1"><Video size={18} /></div>
-                            <div className="font-bold text-lg">{data.videosCount || 0}</div>
+                            <div className="font-bold text-lg">{data.videoCount || 0}</div>
                             <div className="text-xs text-gray-400">Videos</div>
                         </div>
                         <div className="text-center">
@@ -177,12 +177,14 @@ export default function CampaignManagementPage() {
                     >
                         <Eye size={16} /> LeaderBoard
                     </Button>
-                    <Button
-                        onClick={() => handleEdit(data)}
-                        className="!bg-[#b30000] !text-white hover:!bg-[#cc0000] !border-none h-10 px-6 font-medium"
-                    >
-                        Edit
-                    </Button>
+                    {status !== 'Completed' && (
+                        <Button
+                            onClick={() => handleEdit(data)}
+                            className="!bg-[#b30000] !text-white hover:!bg-[#cc0000] !border-none h-10 px-6 font-medium"
+                        >
+                            Edit
+                        </Button>
+                    )}
                 </div>
             </div>
         );

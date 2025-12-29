@@ -233,7 +233,7 @@ export default function UserManagementPage() {
 
                         { key: '1', label: `All Users ${stats.totalUsers ? `(${stats.totalUsers})` : ''}` },
                         { key: '2', label: `Banned ${stats.banned ? `(${stats.banned})` : ''}` },
-                        { key: '3', label: `Reported ${stats.reported ? `(${stats.reported})` : ''}` },
+                        // { key: '3', label: `Reported ${stats.reported ? `(${stats.reported})` : ''}` },
                     ]}
                 />
 
