@@ -97,8 +97,7 @@ export default function WinnersPage() {
                     <>
                         <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
                             <div
-                                className="w-20 h-20 rounded-full bg-[#f97316] flex items-center justify-center text-white shadow-lg shadow-orange-200/50 relative overflow-hidden shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={(e) => handleVideoClick(latestWinner.firstWinnerVideo, e)}
+                                className="w-20 h-20 rounded-full bg-[#f97316] flex items-center justify-center text-white shadow-lg shadow-orange-200/50 relative overflow-hidden shrink-0  hover:opacity-90 transition-opacity"
                             >
                                 {latestWinner.firstWinnerVideo?.user?.profilePicture ? (
                                     // eslint-disable-next-line @next/next/no-img-element
