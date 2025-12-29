@@ -177,12 +177,14 @@ export default function CampaignManagementPage() {
                     >
                         <Eye size={16} /> LeaderBoard
                     </Button>
-                    <Button
-                        onClick={() => handleEdit(data)}
-                        className="!bg-[#b30000] !text-white hover:!bg-[#cc0000] !border-none h-10 px-6 font-medium"
-                    >
-                        Edit
-                    </Button>
+                    {status !== 'Completed' && (
+                        <Button
+                            onClick={() => handleEdit(data)}
+                            className="!bg-[#b30000] !text-white hover:!bg-[#cc0000] !border-none h-10 px-6 font-medium"
+                        >
+                            Edit
+                        </Button>
+                    )}
                 </div>
             </div>
         );
