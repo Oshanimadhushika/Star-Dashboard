@@ -4,6 +4,7 @@ import { Input } from 'antd';
 import { Search, Trophy } from 'lucide-react';
 import WinnersModal from '@/components/winners/WinnersModal';
 import CustomPagination from '@/components/CustomPagination';
+import CMSVideoModal from '@/components/CMSVideoModal';
 
 
 import { getLatestWinner, getAllCampaignWinners } from '@/app/services/winnerService';
@@ -18,6 +19,16 @@ export default function WinnersPage() {
     const [selectedCampaign, setSelectedCampaign] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [latestWinner, setLatestWinner] = useState(null);
+    const [videoModalOpen, setVideoModalOpen] = useState(false);
+    const [selectedVideo, setSelectedVideo] = useState(null);
+
+    const handleVideoClick = (video, e) => {
+        if (e) e.stopPropagation();
+        if (video) {
+            setSelectedVideo(video);
+            setVideoModalOpen(true);
+        }
+    };
 
     // Campaign List State
     const [campaigns, setCampaigns] = useState([]);
@@ -71,7 +82,7 @@ export default function WinnersPage() {
     };
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto">
+        <div className="p-3 md:p-8 max-w-[1600px] mx-auto">
             <h1 className="text-[28px] font-bold mb-2 text-black">Winners</h1>
             <p className="text-gray-500 mb-8 text-base">Announce and celebrate the winning submissions.</p>
 
@@ -83,7 +94,10 @@ export default function WinnersPage() {
                 ) : latestWinner ? (
                     <>
                         <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
-                            <div className="w-20 h-20 rounded-full bg-[#f97316] flex items-center justify-center text-white shadow-lg shadow-orange-200/50 relative overflow-hidden shrink-0">
+                            <div
+                                className="w-20 h-20 rounded-full bg-[#f97316] flex items-center justify-center text-white shadow-lg shadow-orange-200/50 relative overflow-hidden shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={(e) => handleVideoClick(latestWinner.firstWinnerVideo, e)}
+                            >
                                 {latestWinner.firstWinnerVideo?.user?.profilePicture ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img src={latestWinner.firstWinnerVideo?.user?.profilePicture} alt="Winner" className="w-full h-full object-cover" />
@@ -105,7 +119,7 @@ export default function WinnersPage() {
                             </div>
                         </div>
                         <div className="text-left md:text-right w-full md:w-auto">
-                            <p className="text-gray-500 text-sm mb-1 font-medium">Prize amount</p>
+                            <p className="text-gray-500 text-sm mb-1 font-medium">Prize Amount</p>
                             <p className="text-3xl font-extrabold text-gray-800">{latestWinner.campaign?.pricePool ? `$${latestWinner.campaign.pricePool.toLocaleString()}` : 'N/A'}</p>
                         </div>
                     </>
@@ -148,14 +162,21 @@ export default function WinnersPage() {
                     <p className="text-2xl font-bold text-black">{latestWinner?.firstWinnerVideo?.viewsCount?.toLocaleString() || 0}</p>
                 </div>
 
-                <div className="col-span-1 md:col-span-2 bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 h-full flex flex-col justify-between">
-                    <p className="text-gray-500 text-sm mb-2 font-medium">Winning Video</p>
-                    <p className="font-bold text-black text-lg truncate" title={latestWinner?.firstWinnerVideo?.title}>{latestWinner?.firstWinnerVideo?.title || 'N/A'}</p>
+                <div
+                    className="col-span-1 md:col-span-2 bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 h-full flex flex-col justify-between cursor-pointer hover:border-orange-200 transition-colors group"
+                    onClick={(e) => handleVideoClick(latestWinner?.firstWinnerVideo, e)}
+                >
+                    <p className="text-gray-500 text-sm mb-2 font-medium flex items-center gap-2">
+                        Winning Video <Search size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </p>
+                    <p className="font-bold text-black text-lg truncate group-hover:text-orange-500 transition-colors" title={latestWinner?.firstWinnerVideo?.title}>
+                        {latestWinner?.firstWinnerVideo?.title || 'N/A'}
+                    </p>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 h-full flex flex-col justify-between">
                     <p className="text-gray-500 text-sm mb-2 font-medium">Participants</p>
-                    <p className="text-2xl font-bold text-black">{latestWinner?.campaign?.enrolledCount?.toLocaleString() || 0}</p>
+                    <p className="text-2xl font-bold text-black">{latestWinner?.campaign?.enrolledCount || 0}</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 h-full flex flex-col justify-between">
@@ -225,7 +246,7 @@ export default function WinnersPage() {
                             <div
                                 key={campaign.campaignId}
                                 onClick={() => handleRowClick(campaign)}
-                                className="bg-white p-5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col md:flex-row items-center justify-between cursor-pointer hover:shadow-lg hover:border-blue-100 transition-all group duration-300 gap-4"
+                                className="bg-white p-2 md:p-5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col md:flex-row items-center justify-between cursor-pointer hover:shadow-lg hover:border-blue-100 transition-all group duration-300 gap-4"
                             >
                                 <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
                                     <div className={`w-12 h-12 rounded-full ${COLORS[index % COLORS.length]} flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-110 transition-transform duration-300 shrink-0`}>
@@ -271,6 +292,13 @@ export default function WinnersPage() {
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 campaignId={selectedCampaign?.campaignId}
+            />
+
+            <CMSVideoModal
+                open={videoModalOpen}
+                onCancel={() => setVideoModalOpen(false)}
+                videoUrl={selectedVideo?.videoUrl}
+                title={selectedVideo?.title}
             />
         </div>
     );

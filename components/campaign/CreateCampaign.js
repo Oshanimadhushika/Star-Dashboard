@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Input, Button, Modal, Upload, Select, DatePicker, Steps, InputNumber, Form } from 'antd';
-import { Edit, Plus, UploadCloud, X, Check, CheckCircle, Calendar } from 'lucide-react';
-import { createCampaign, uploadCampaignImage } from '@/app/services/campaignService';
+import { Edit, Plus, UploadCloud, X, Check, CheckCircle, Calendar, AlertCircle } from 'lucide-react';
+import { createCampaign, uploadCampaignImage, validateCampaignTitle } from '@/app/services/campaignService';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
 import { NotificationContext } from '@/app/context/NotificationContext';
+import useDebounce from '@/app/hooks/useDebounce';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -20,6 +21,10 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
 
     const { trigger: triggerCreate, loading: createLoading } = useLazyFetch(createCampaign);
     const { trigger: triggerUpload, loading: uploadLoading } = useLazyFetch(uploadCampaignImage);
+    const { trigger: triggerValidateTitle, loading: validatingTitle } = useLazyFetch(validateCampaignTitle);
+
+    const [titleError, setTitleError] = useState('');
+    const [isTitleValid, setIsTitleValid] = useState(null);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -36,6 +41,31 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
         rules: [],
     });
 
+    const debouncedTitle = useDebounce(formData.title, 500);
+
+    useEffect(() => {
+        const validateTitle = async () => {
+            if (!debouncedTitle || debouncedTitle.trim().length === 0) {
+                setIsTitleValid(null);
+                setTitleError('');
+                return;
+            }
+
+            const res = await triggerValidateTitle({ title: debouncedTitle }, { successMsg: false, errorMsg: true });
+
+            if (res?.data?.success) {
+                setIsTitleValid(true);
+                setTitleError('');
+            } else {
+                setIsTitleValid(false);
+                setTitleError(res?.data?.message || 'Title is already taken or invalid');
+            }
+        };
+
+        validateTitle();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedTitle]);
+
     const stepFields = {
         0: ["title", "description", "pricePool"],
         1: [
@@ -48,6 +78,13 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
 
     const validateCurrentStep = () => {
         if (!open) return;
+
+        // Block next if currently validating title or title is invalid (only for step 0)
+        if (currentStep === 0 && (validatingTitle || isTitleValid === false || !formData.title?.trim())) {
+            setIsStepValid(false);
+            return;
+        }
+
         const fieldsToValidate = stepFields[currentStep];
 
         const errors = form.getFieldsError(fieldsToValidate);
@@ -483,6 +520,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     <div className="flex gap-2 mb-4">
                         <Input
                             value={newRule}
+                            maxLength={100}
                             onChange={(e) => setNewRule(e.target.value)}
                             placeholder="Type a rule..."
                             className="!bg-[#2e2e48] !border-[#444] !text-white"

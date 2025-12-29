@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input, Button, Modal, Form, DatePicker, InputNumber } from 'antd';
 import { Edit, Plus, X, Calendar } from 'lucide-react';
-import { updateCampaign } from '@/app/services/campaignService';
+import { updateCampaign, validateCampaignTitle } from '@/app/services/campaignService';
 import useLazyFetch from '@/app/hooks/useLazyFetch';
+import useDebounce from '@/app/hooks/useDebounce';
 import dayjs from 'dayjs';
 const { TextArea } = Input;
 
@@ -10,8 +11,12 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
     const [editForm] = Form.useForm();
     const [isEditDirty, setIsEditDirty] = useState(false);
     const [initialFormValues, setInitialFormValues] = useState({});
+    const [titleError, setTitleError] = useState('');
+    const [isTitleValid, setIsTitleValid] = useState(null);
+    const initialTitleRef = useRef(null);
 
     const { trigger: triggerUpdate, loading: updateLoading } = useLazyFetch(updateCampaign);
+    const { trigger: triggerValidateTitle, loading: validatingTitle } = useLazyFetch(validateCampaignTitle);
 
     useEffect(() => {
         if (campaign && open) {
@@ -33,6 +38,9 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
             setInitialFormValues(values);
             editForm.setFieldsValue(values);
             setIsEditDirty(false);
+            initialTitleRef.current = campaign.title;
+            setIsTitleValid(null);
+            setTitleError('');
         }
     }, [campaign, open, editForm]);
 
@@ -41,6 +49,43 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
             editForm.setFieldValue('rules', []);
         }
     }, [campaign, editForm]);
+
+    const watchedTitle = Form.useWatch('title', editForm);
+    const debouncedTitle = useDebounce(watchedTitle, 500);
+
+    useEffect(() => {
+        const validateTitle = async () => {
+            if (!open) return;
+
+            if (!editForm.isFieldTouched('title')) return;
+
+            if (!debouncedTitle || debouncedTitle.trim().length === 0) {
+                setIsTitleValid(null);
+                setTitleError('');
+                return;
+            }
+
+            // If title hasn't changed from original, don't validate (it's valid)
+            if (initialTitleRef.current === debouncedTitle) {
+                setIsTitleValid(true);
+                setTitleError('');
+                return;
+            }
+
+            const res = await triggerValidateTitle({ title: debouncedTitle }, { successMsg: false, errorMsg: true });
+
+            if (res?.data?.success) {
+                setIsTitleValid(true);
+                setTitleError('');
+            } else {
+                setIsTitleValid(false);
+                setTitleError(res?.data?.message || 'Title is already taken or invalid');
+            }
+        };
+
+        validateTitle();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedTitle, open]);
 
     return (
         <Modal
@@ -109,24 +154,28 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                 }}
             >
                 <div className="grid grid-cols-2 gap-4">
-                    <Form.Item
-                        name="title"
-                        label={<span className="text-white">Campaign Title *</span>}
-                        rules={[
-                            { required: true, message: 'Please enter campaign title' },
-                            { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' },
-                            {
-                                validator: (_, value) => {
-                                    if (value && !value.trim()) {
-                                        return Promise.reject(new Error('Please enter a valid value'));
+                    <div>
+                        <Form.Item
+                            name="title"
+                            label={<span className="text-white">Campaign Title *</span>}
+                            rules={[
+                                { required: true, message: 'Please enter campaign title' },
+                                { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' },
+                                {
+                                    validator: (_, value) => {
+                                        if (value && !value.trim()) {
+                                            return Promise.reject(new Error('Please enter a valid value'));
+                                        }
+                                        return Promise.resolve();
                                     }
-                                    return Promise.resolve();
                                 }
-                            }
-                        ]}
-                    >
-                        <Input className="!bg-[#2e2e48] !border-[#444] !text-white" />
-                    </Form.Item>
+                            ]}
+                        >
+                            <Input className="!bg-[#2e2e48] !border-[#444] !text-white" />
+                        </Form.Item>
+                        {validatingTitle && <div className="text-blue-400 text-xs mt-1">Validating title...</div>}
+                        {titleError && <div className="text-red-500 text-xs mt-1">{titleError}</div>}
+                    </div>
                     <Form.Item
                         name="pricePool"
                         label={<span className="text-white">Price Pool *</span>}
@@ -163,6 +212,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                 <div className="grid grid-cols-2 gap-4">
                     <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Campaign start date is required' }]}>
                         <DatePicker
+                            showTime
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.enrollStartTime && !dayjs(campaign.enrollStartTime).isAfter(dayjs(), 'day')}
@@ -186,6 +236,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                         ]}
                     >
                         <DatePicker
+                            showTime
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.reviewStartTime && !dayjs(campaign.reviewStartTime).isAfter(dayjs(), 'day')}
@@ -209,6 +260,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                         ]}
                     >
                         <DatePicker
+                            showTime
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.votingStartTime && !dayjs(campaign.votingStartTime).isAfter(dayjs(), 'day')}
@@ -232,12 +284,15 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                         ]}
                     >
                         <DatePicker
+                            showTime
                             className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
                             suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.completeTime && !dayjs(campaign.completeTime).isAfter(dayjs(), 'day')}
                         />
                     </Form.Item>
                 </div>
+
+
 
                 <div className="grid grid-cols-3 gap-4">
                     <Form.Item
@@ -318,7 +373,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     <Button onClick={onCancel} className="!bg-white !border-gray-300 !text-black !h-11 font-medium">
                         Cancel
                     </Button>
-                    <Button type="primary" htmlType="submit" loading={updateLoading} disabled={!isEditDirty} className="!bg-[#0000aa] !border-none !h-11 font-medium hover:!bg-[#0000cc] !text-white disabled:!text-gray-300 disabled:!bg-[#0000aa]/50">
+                    <Button type="primary" htmlType="submit" loading={updateLoading} disabled={!isEditDirty || validatingTitle || isTitleValid === false} className="!bg-[#0000aa] !border-none !h-11 font-medium hover:!bg-[#0000cc] !text-white disabled:!text-gray-300 disabled:!bg-[#0000aa]/50">
                         Save Changes
                     </Button>
                 </div>
