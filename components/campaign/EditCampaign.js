@@ -212,7 +212,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     <Form.Item name="enrollStartTime" label={<span className="text-white">Campaign Start Date *</span>} rules={[{ required: true, message: 'Campaign start date is required' }]}>
                         <DatePicker
                             showTime
-                            className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                            className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-400 disabled:!bg-[#28283d] disabled:!opacity-100"
                             suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.enrollStartTime && !dayjs(campaign.enrollStartTime).isAfter(dayjs(), 'day')}
                         />
@@ -236,7 +236,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     >
                         <DatePicker
                             showTime
-                            className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                            className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-400 disabled:!bg-[#28283d] disabled:!opacity-100"
                             suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.reviewStartTime && !dayjs(campaign.reviewStartTime).isAfter(dayjs(), 'day')}
                         />
@@ -260,7 +260,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     >
                         <DatePicker
                             showTime
-                            className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                            className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-400 disabled:!bg-[#28283d] disabled:!opacity-100"
                             suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.votingStartTime && !dayjs(campaign.votingStartTime).isAfter(dayjs(), 'day')}
                         />
@@ -284,7 +284,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     >
                         <DatePicker
                             showTime
-                            className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-500 disabled:!bg-[#28283d]"
+                            className="w-full !bg-[#2e2e48] !border-[#444] !text-white disabled:!text-gray-400 disabled:!bg-[#28283d] disabled:!opacity-100"
                             suffixIcon={<Calendar className="text-white" size={16} />}
                             disabled={campaign?.completeTime && !dayjs(campaign.completeTime).isAfter(dayjs(), 'day')}
                         />
@@ -348,7 +348,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                                 {fields.map((field, index) => (
                                     <div key={field.key} className="flex gap-2">
                                         <Form.Item
-                                            {...field}
+                                            name={field.name}
                                             noStyle
                                         >
                                             <Input maxLength={100}

@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Modal } from "antd";
 import { X, Play } from "lucide-react";
 
 export default function CMSVideoModal({ open, onCancel, videoUrl, title }) {
     const [isPlaying, setIsPlaying] = useState(false);
+    const videoRef = useRef(null);
+
+    useEffect(() => {
+        if (isPlaying && videoRef.current) {
+            videoRef.current.play().catch((err) => console.error("Video play failed:", err));
+        }
+    }, [isPlaying]);
 
     return (
         <Modal
@@ -11,7 +18,7 @@ export default function CMSVideoModal({ open, onCancel, videoUrl, title }) {
             onCancel={onCancel}
             footer={null}
             centered
-            destroyOnClose
+            destroyOnHidden
             afterClose={() => setIsPlaying(false)}
             closeIcon={<X size={20} className="text-gray-500 hover:text-gray-800" />}
             width={600}
@@ -50,6 +57,7 @@ export default function CMSVideoModal({ open, onCancel, videoUrl, title }) {
                                 </>
                             ) : (
                                 <video
+                                    ref={videoRef}
                                     controls
                                     autoPlay
                                     className="w-full h-full object-contain"
