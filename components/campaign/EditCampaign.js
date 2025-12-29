@@ -111,7 +111,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                 <div className="grid grid-cols-2 gap-4">
                     <Form.Item
                         name="title"
-                        label={<span className="text-white">Campaign Title</span>}
+                        label={<span className="text-white">Campaign Title *</span>}
                         rules={[
                             { required: true, message: 'Please enter campaign title' },
                             { min: 5, max: 50, message: 'Title must be between 5 and 50 characters' },
@@ -129,11 +129,12 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                     </Form.Item>
                     <Form.Item
                         name="pricePool"
-                        label={<span className="text-white">Price Pool</span>}
+                        label={<span className="text-white">Price Pool *</span>}
                         rules={[{ required: true, message: 'Please enter price amount' }]}
                     >
                         <InputNumber
                             className="!w-full !bg-[#2e2e48] !border-[#444] !text-white input-number-dark"
+                            maxLength={13}
                             formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                             parser={(value) => value?.replace(/\D/g, '')}
                         />
@@ -142,7 +143,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
 
                 <Form.Item
                     name="description"
-                    label={<span className="text-white">Description</span>}
+                    label={<span className="text-white">Description *</span>}
                     rules={[
                         { required: true, message: 'Please enter description' },
                         { min: 20, max: 300, message: 'Description must be between 20 and 300 characters' },
@@ -254,10 +255,10 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                             }
                         ]}
                     >
-                        <InputNumber placeholder="Leave empty for unlimited" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                        <InputNumber maxLength={4} placeholder="Leave empty for unlimited" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
                     <Form.Item name="minAgeLimit" label={<span className="text-white">Min Age</span>} rules={[{ required: false, message: 'Required' }]}>
-                        <InputNumber placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                        <InputNumber maxLength={2} placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
                     <Form.Item
                         name="maxAgeLimit"
@@ -276,7 +277,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                             }),
                         ]}
                     >
-                        <InputNumber placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
+                        <InputNumber maxLength={2} placeholder="No restriction" className="!w-full !bg-[#2e2e48] !border-[#444] !text-white" />
                     </Form.Item>
                 </div>
 
@@ -296,7 +297,8 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                                             {...field}
                                             noStyle
                                         >
-                                            <Input className="!bg-[#2e2e48] !border-[#444] !text-white" placeholder="Rule" />
+                                            <Input maxLength={100}
+                                                className="!bg-[#2e2e48] !border-[#444] !text-white" placeholder="Rule" />
                                         </Form.Item>
                                         <Button
                                             type="text"
