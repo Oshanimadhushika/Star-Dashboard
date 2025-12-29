@@ -232,9 +232,9 @@ export default function WinnersPage() {
                                         {index + 1 + ((page - 1) * 10)}
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-black text-lg mb-1">{campaign.title}</h4>
+                                        <h4 className="font-bold text-black text-lg mb-1" title={campaign.title}>{campaign.title?.length > 15 ? `${campaign.title.slice(0, 15)}...` : campaign.title}</h4>
                                         <div className="text-gray-500 text-sm flex flex-wrap items-center gap-2 md:gap-3">
-                                            <span className="font-medium whitespace-nowrap">Winner : <span className="text-black font-semibold">{campaign.winner?.user || 'N/A'}</span></span>
+                                            <span className="font-medium whitespace-nowrap">Winner : <span className="text-black font-semibold" title={campaign.winner?.user}>{campaign.winner?.user?.length > 20 ? `${campaign.winner.user.slice(0, 20)}...` : (campaign.winner?.user || 'N/A')}</span></span>
                                             <span className="hidden md:block w-1 h-1 rounded-full bg-gray-300"></span>
                                             <span className="flex items-center gap-1.5 text-orange-500 font-bold bg-orange-50 px-2 py-0.5 rounded-full text-xs whitespace-nowrap">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>

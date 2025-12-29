@@ -122,7 +122,7 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                                 </div>
 
                                 <div className="text-center w-full">
-                                    <h3 className="font-bold text-lg text-black leading-tight mb-1">{secondWinner?.user || 'No Winner'}</h3>
+                                    <h3 className="font-bold text-lg text-black leading-tight mb-1" title={secondWinner?.user}>{secondWinner?.user?.length > 10 ? `${secondWinner.user.slice(0, 10)}...` : (secondWinner?.user || 'No Winner')}</h3>
                                     <p className="text-[#94a3b8] text-xs mb-4 font-medium px-2 truncate w-full">{secondWinner?.title || '-'}</p>
 
                                     <div className="bg-[#64748b] text-white rounded-2xl py-5 px-2 shadow-sm text-center w-full relative h-[120px] flex flex-col justify-center items-center mb-3">
@@ -151,7 +151,7 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                                 </div>
 
                                 <div className="text-center w-full">
-                                    <h3 className="font-bold text-xl text-black leading-tight mb-1">{firstWinner?.user || 'No Winner'}</h3>
+                                    <h3 className="font-bold text-xl text-black leading-tight mb-1" title={firstWinner?.user}>{firstWinner?.user?.length > 10 ? `${firstWinner.user.slice(0, 10)}...` : (firstWinner?.user || 'No Winner')}</h3>
                                     <div className="flex justify-center mb-1">
                                         <span className="border border-[#fbbf24] text-[#d97706] text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide bg-orange-50 flex items-center gap-1">
                                             <Trophy size={10} strokeWidth={2} /> Champion
@@ -185,7 +185,7 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                                 </div>
 
                                 <div className="text-center w-full">
-                                    <h3 className="font-bold text-lg text-black leading-tight mb-1">{thirdWinner?.user || 'No Winner'}</h3>
+                                    <h3 className="font-bold text-lg text-black leading-tight mb-1" title={thirdWinner?.user}>{thirdWinner?.user?.length > 10 ? `${thirdWinner.user.slice(0, 10)}...` : (thirdWinner?.user || 'No Winner')}</h3>
                                     <p className="text-[#94a3b8] text-xs mb-4 font-medium px-2 truncate w-full">{thirdWinner?.title || '-'}</p>
 
                                     <div className="bg-[#ff0000] text-white rounded-2xl py-5 px-2 shadow-sm text-center w-full relative h-[120px] flex flex-col justify-center items-center mb-3">
@@ -220,8 +220,12 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                                                     </div>
                                                     <Avatar src={getAvatarSrc(p.profilePicture)} size={42} className="bg-[#ec4899] text-white text-lg font-bold">{p.user ? p.user.substring(0, 2).toUpperCase() : "NA"}</Avatar>
                                                     <div>
-                                                        <div className="font-bold text-black text-base">{p.user}</div>
-                                                        <div className="text-[#94a3b8] text-xs mt-0.5">{p.title}</div>
+                                                        <div className="font-bold text-black text-base" title={p.user}>
+                                                            {p.user?.length > 20 ? `${p.user.slice(0, 20)}...` : (p.user || 'N/A')}
+                                                        </div>
+                                                        <div className="text-[#94a3b8] text-xs mt-0.5" title={p.title}>
+                                                            {p.title?.length > 15 ? `${p.title.slice(0, 15)}...` : (p.title || 'N/A')}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-8 pr-2">

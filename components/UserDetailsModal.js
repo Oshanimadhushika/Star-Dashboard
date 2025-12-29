@@ -69,7 +69,7 @@ const UserDetailsModal = ({ open, onClose, user, onBan, onActivate }) => {
                                     <div>
                                         <label className="block text-xs text-gray-500 mb-1">Mobile Number</label>
                                         <div className="bg-gray-50 p-3 rounded-lg text-gray-700 font-medium">
-                                            {user.mobile || "N/A"}
+                                            {user.mobile ? `+94 ${user.mobile}` : "N/A"}
                                         </div>
                                     </div>
                                     <div>
@@ -85,7 +85,7 @@ const UserDetailsModal = ({ open, onClose, user, onBan, onActivate }) => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-gray-500 mb-1">Last active</label>
+                                        <label className="block text-xs text-gray-500 mb-1">Last Active</label>
                                         <div className="bg-gray-50 p-3 rounded-lg text-gray-700 font-medium">
                                             {user.lastActive ? dayjs(user.lastActive).format('MM/DD/YYYY') : "N/A"}
                                         </div>
