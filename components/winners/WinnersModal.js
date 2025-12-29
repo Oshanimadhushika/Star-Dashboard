@@ -21,6 +21,7 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
             setTopWinners({ firstWinner: {}, secondWinner: {}, thirdWinner: {} });
             setOtherParticipants([]);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, campaignId]);
 
     const fetchTopWinners = async () => {

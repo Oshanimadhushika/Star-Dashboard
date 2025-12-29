@@ -34,7 +34,6 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                 rules: campaign.campaignRules || [],
                 status: campaign.status || '',
             };
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setInitialFormValues(values);
             editForm.setFieldsValue(values);
             setIsEditDirty(false);
