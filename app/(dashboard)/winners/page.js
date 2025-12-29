@@ -49,6 +49,7 @@ export default function WinnersPage() {
             }
         };
         loadLatestWinner();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Fetch All Campaign Winners
@@ -69,6 +70,7 @@ export default function WinnersPage() {
         };
 
         fetchCampaigns();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, debouncedSearch]);
 
     const handleRowClick = (campaign) => {

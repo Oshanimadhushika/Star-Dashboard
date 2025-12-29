@@ -61,6 +61,7 @@ export default function UserManagementPage() {
 
     useEffect(() => {
         fetchUsers();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage, debouncedSearch, activeTab]);
 
     const handleBan = (record) => {

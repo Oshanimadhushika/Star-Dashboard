@@ -5,12 +5,6 @@ import { X, Play } from "lucide-react";
 export default function CMSVideoModal({ open, onCancel, videoUrl, title }) {
     const [isPlaying, setIsPlaying] = useState(false);
 
-    useEffect(() => {
-        if (open) {
-            setIsPlaying(false);
-        }
-    }, [open]);
-
     return (
         <Modal
             open={open}
@@ -18,6 +12,7 @@ export default function CMSVideoModal({ open, onCancel, videoUrl, title }) {
             footer={null}
             centered
             destroyOnClose
+            afterClose={() => setIsPlaying(false)}
             closeIcon={<X size={20} className="text-gray-500 hover:text-gray-800" />}
             width={600}
             className="video-modal"
