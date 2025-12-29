@@ -15,3 +15,7 @@ export const getAllCampaigns = async (params) => {
 export const updateCampaign = async (data) => {
     return authorizedAxiosInstance.post("/campaign/admin/update", data);
 };
+
+export const validateCampaignTitle = async (data) => {
+    return authorizedAxiosInstance.post("/campaign/validate-compaign-title", data);
+};

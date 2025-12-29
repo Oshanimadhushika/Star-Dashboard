@@ -155,7 +155,7 @@ export default function WinnersPage() {
 
                 <div className="bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 h-full flex flex-col justify-between">
                     <p className="text-gray-500 text-sm mb-2 font-medium">Participants</p>
-                    <p className="text-2xl font-bold text-black">{latestWinner?.campaign?.enrolledCount?.toLocaleString() || 0}</p>
+                    <p className="text-2xl font-bold text-black">{latestWinner?.campaign?.enrolledCount || 0}</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 h-full flex flex-col justify-between">
