@@ -19,3 +19,7 @@ export const updateCampaign = async (data) => {
 export const validateCampaignTitle = async (data) => {
     return authorizedAxiosInstance.post("/campaign/validate-compaign-title", data);
 };
+
+export const getAllCampaignsDropdown = async () => {
+    return authorizedAxiosInstance.get("/campaign/all-dropdown-list");
+};
