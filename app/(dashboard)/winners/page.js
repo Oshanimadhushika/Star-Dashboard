@@ -267,7 +267,7 @@ export default function WinnersPage() {
                                 </div>
                                 <div className="text-left md:text-right flex flex-col items-start md:items-end gap-1 w-full md:w-auto pl-0 md:pl-0 mt-2 md:mt-0">
                                     <div className="bg-[#fff7ed] text-[#ea580c] px-3 py-1 rounded-lg text-sm font-bold border border-[#ffedd5] inline-block shadow-sm">
-                                        {campaign.pricePool ? `$${campaign.pricePool.toLocaleString()}` : '$0'}
+                                        {campaign.pricePool ? `LKR ${campaign.pricePool.toLocaleString()}` : '$0'}
                                     </div>
                                     <p className="text-gray-400 text-xs font-medium">{campaign.completedAt ? dayjs(campaign.completedAt).format('YYYY-MM-DD') : 'Date N/A'}</p>
                                 </div>
