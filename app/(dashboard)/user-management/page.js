@@ -130,7 +130,7 @@ export default function UserManagementPage() {
             key: "name",
             render: (text, record) => (
                 <div className="flex items-center gap-3">
-                    <Avatar size="large" icon={<UserOutlined />} src={record.avatar || null} className="bg-gray-200" />
+                    <Avatar size="large" icon={<UserOutlined />} src={record.profilePicture || null} className="bg-gray-200" />
                     <div className="flex flex-col">
                         <span className="font-medium text-gray-700">
                             {(text || record.userName)?.length > 15 ? (text || record.userName).substring(0, 15) + "..." : (text || record.userName)}
