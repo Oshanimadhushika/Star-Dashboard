@@ -121,7 +121,7 @@ export default function WinnersPage() {
                         </div>
                         <div className="text-left md:text-right w-full md:w-auto">
                             <p className="text-gray-500 text-sm mb-1 font-medium">Prize Amount</p>
-                            <p className="text-xl font-extrabold text-gray-800">{latestWinner.campaign?.pricePool ? `${latestWinner.campaign.pricePool.toLocaleString()}` : 'N/A'}</p>
+                            <p className="text-xl font-extrabold text-gray-800">LKR {latestWinner.campaign?.pricePool ? `${latestWinner.campaign.pricePool.toLocaleString()}` : 'N/A'}</p>
                         </div>
                     </>
                 ) : (
