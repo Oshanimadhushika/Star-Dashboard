@@ -533,15 +533,15 @@ export default function VideoModerationPage() {
                                         <h3 className="text-lg font-bold text-gray-900 mb-4">Creator Information</h3>
                                         <div className="flex flex-row justify-around text-left gap-3">
                                             <div>
-                                                <div className="text-4xl font-bold text-gray-900">{selectedVideo.videoCount || 0}</div>
+                                                <div className="text-4xl font-bold text-gray-900">{selectedVideo.user?.videoCount || 0}</div>
                                                 <div className="text-gray-500 text-sm">Total Videos</div>
                                             </div>
                                             <div>
-                                                <div className="text-4xl font-bold text-gray-900">{selectedVideo.viewsCount || 0}</div>
+                                                <div className="text-4xl font-bold text-gray-900">{selectedVideo.user?.receivedViewsCount || 0}</div>
                                                 <div className="text-gray-500 text-sm">Total Views</div>
                                             </div>
                                             <div>
-                                                <div className="text-4xl font-bold text-gray-900">{selectedVideo.votesCount || 0}</div>
+                                                <div className="text-4xl font-bold text-gray-900">{selectedVideo.user?.receivedVoteCount || 0}</div>
                                                 <div className="text-gray-500 text-sm">Total Votes</div>
                                             </div>
                                         </div>
