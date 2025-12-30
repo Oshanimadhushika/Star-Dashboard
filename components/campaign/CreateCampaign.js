@@ -198,6 +198,8 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                             className="!bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500"
                         />
                     </Form.Item>
+                    {validatingTitle && <div className="text-blue-400 text-xs">Validating title...</div>}
+
 
                     <Form.Item
                         name="description"
@@ -561,14 +563,13 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                             <div className="text-right">{formData.completeTime ? dayjs(formData.completeTime).format('YYYY-MM-DD HH:mm') : 'Not set'}</div>
                         </div>
                     </div>
-
-                    <div>
+                    {formData.rules.length !== 0 && (<div>
                         <h4 className="font-semibold mb-2">Rules({formData.rules.length})</h4>
                         <ul className="list-decimal list-inside text-gray-300 space-y-1">
                             {formData.rules.map((rule, i) => <li key={i}>{rule}</li>)}
-                            {formData.rules.length === 0 && <li>No rules defined</li>}
                         </ul>
-                    </div>
+                    </div>)}
+
                 </div>
             )
         }
