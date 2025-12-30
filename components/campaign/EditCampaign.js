@@ -20,6 +20,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
 
     useEffect(() => {
         if (campaign && open) {
+            editForm.resetFields();
             const values = {
                 title: campaign.title,
                 description: campaign.description,
@@ -84,7 +85,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
 
         validateTitle();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedTitle, open]);
+    }, [debouncedTitle]);
 
     return (
         <Modal

@@ -116,12 +116,12 @@ export default function WinnersPage() {
                                         <Trophy size={11} fill="#f97316" /> Champion
                                     </span>
                                 </div>
-                                <p className="text-gray-700 font-bold text-lg">{latestWinner.campaign?.title || 'Unknown Campaign'}</p>
+                                <p className="text-gray-700 font-bold text-lg" title={latestWinner.campaign?.title}>{latestWinner.campaign?.title?.length > 30 ? `${latestWinner.campaign.title.slice(0, 30)}...` : (latestWinner.campaign?.title || 'Unknown Campaign')}</p>
                             </div>
                         </div>
                         <div className="text-left md:text-right w-full md:w-auto">
                             <p className="text-gray-500 text-sm mb-1 font-medium">Prize Amount</p>
-                            <p className="text-3xl font-extrabold text-gray-800">{latestWinner.campaign?.pricePool ? `$${latestWinner.campaign.pricePool.toLocaleString()}` : 'N/A'}</p>
+                            <p className="text-xl font-extrabold text-gray-800">{latestWinner.campaign?.pricePool ? `${latestWinner.campaign.pricePool.toLocaleString()}` : 'N/A'}</p>
                         </div>
                     </>
                 ) : (
