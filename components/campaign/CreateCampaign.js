@@ -233,6 +233,7 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                             className="!w-full !bg-[#2e2e48] !border-[#444] !text-white placeholder-gray-500"
                             min={0}
                             maxLength={12}
+                            prefix={<span className="text-gray-400 mr-2">LKR</span>}
                             formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                             parser={(value) => value?.replace(/\D/g, '')}
                             onKeyPress={(event) => {
@@ -543,8 +544,8 @@ export default function CreateCampaign({ open, onCancel, onSuccess }) {
                     <div className="grid grid-cols-2 gap-y-4 text-sm mb-6">
                         <div className="text-gray-400">Title</div>
                         <div className="text-right font-medium">{formData.title}</div>
-                        <div className="text-gray-400">Prize</div>
-                        <div className="text-right font-medium">{formData.pricePool}</div>
+                        <div className="text-gray-400">Price</div>
+                        <div className="text-right font-medium">LKR {formData.pricePool}</div>
                     </div>
 
                     <div className="mb-6">
