@@ -32,7 +32,7 @@ const UserDetailsModal = ({ open, onClose, user, onBan, onActivate }) => {
                     <Avatar
                         size={64}
                         icon={<UserOutlined />}
-                        src={user.avatar || null}
+                        src={user.profilePicture || null}
                         className="bg-[#C00F75]"
                         style={{ backgroundColor: '#C00F75' }}
                     />
