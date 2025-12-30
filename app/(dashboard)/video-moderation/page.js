@@ -9,6 +9,8 @@ import useLazyFetch from "@/app/hooks/useLazyFetch";
 import useDebounce from "@/app/hooks/useDebounce";
 import dayjs from "dayjs";
 import VideoIcon from "@/public/svg/VideoIcon";
+import { getAllCampaignsDropdown } from "@/app/services/campaignService";
+import { Select } from "antd";
 
 export default function VideoModerationPage() {
     const [activeTab, setActiveTab] = useState("1");
@@ -17,11 +19,31 @@ export default function VideoModerationPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+
     const [rejectReason, setRejectReason] = useState("");
+    const [selectedCampaign, setSelectedCampaign] = useState(null);
+    const [campaignOptions, setCampaignOptions] = useState([]);
+
+    const { trigger: fetchCampaigns } = useLazyFetch(getAllCampaignsDropdown);
 
     useEffect(() => {
         if (selectedVideo) setIsPlaying(false);
     }, [selectedVideo]);
+
+    useEffect(() => {
+        const loadCampaigns = async () => {
+            const res = await fetchCampaigns();
+            if (res?.data?.success) {
+                const options = res.data.data.map(c => ({
+                    label: c.title,
+                    value: String(c.id || c.campaignId || c._id)
+                }));
+                setCampaignOptions(options);
+            }
+        };
+        loadCampaigns();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
 
     const [fetchedVideos, setFetchedVideos] = useState([]);
@@ -54,7 +76,8 @@ export default function VideoModerationPage() {
             page: pagination.current,
             limit: pagination.pageSize,
             search: debouncedSearch,
-            status: status
+            status: status,
+            campaign: selectedCampaign
         };
 
         const res = await triggerFetch(params);
@@ -71,7 +94,7 @@ export default function VideoModerationPage() {
             }));
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeTab, pagination.current, pagination.pageSize, debouncedSearch]);
+    }, [activeTab, pagination.current, pagination.pageSize, debouncedSearch, selectedCampaign]);
 
     useEffect(() => {
         fetchVideos();
@@ -219,10 +242,10 @@ export default function VideoModerationPage() {
 
     const columns = [
         {
-            title: "User",
-            dataIndex: "user",
-            key: "user",
-            render: (user, record) => (
+            title: "Title",
+            dataIndex: "title",
+            key: "title",
+            render: (title, record) => (
                 <div className="flex items-center gap-3">
                     <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
@@ -387,16 +410,36 @@ export default function VideoModerationPage() {
                     ]}
                 />
 
-                <Input
-                    prefix={<Search className="text-gray-400" size={18} />}
-                    placeholder="Search by video title or user"
-                    className="!bg-[#f9fafb] !border-none !h-12 !text-base !rounded-lg"
-                    value={searchText}
-                    onChange={(e) => {
-                        setSearchText(e.target.value);
-                        setPagination(prev => ({ ...prev, current: 1 }));
-                    }}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <Input
+                        prefix={<Search className="text-gray-400" size={18} />}
+                        placeholder="Search by video title or user"
+                        className="!bg-[#f9fafb] !border-none !h-12 !text-base !rounded-lg"
+                        value={searchText}
+                        onChange={(e) => {
+                            setSearchText(e.target.value);
+                            setPagination(prev => ({ ...prev, current: 1 }));
+                        }}
+                    />
+
+                    <Select
+                        showSearch
+                        placeholder="Select Campaign"
+                        optionFilterProp="label"
+                        className="w-full h-12 custom-select-campaign"
+                        options={campaignOptions}
+                        value={selectedCampaign}
+                        onChange={(value) => {
+                            setSelectedCampaign(value);
+                            setPagination(prev => ({ ...prev, current: 1 }));
+                        }}
+                        allowClear
+                        filterOption={(input, option) =>
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                    />
+                </div>
             </div>
 
             <CustomTable
