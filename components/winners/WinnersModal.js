@@ -103,7 +103,7 @@ export default function WinnersModal({ open, onCancel, campaignId }) {
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#94a3b8]"></span>
                                 <span>{campaignData.enrolledCount?.toLocaleString()} Participants</span>
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#94a3b8]"></span>
-                                <span className="text-[#eab308] font-semibold">Prize: {campaignData.pricePool?.toLocaleString()}</span>
+                                <span className="text-[#eab308] font-semibold">Prize: LKR {campaignData.pricePool?.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
