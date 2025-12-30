@@ -184,6 +184,7 @@ export default function EditCampaign({ open, onCancel, onSuccess, campaign }) {
                         <InputNumber
                             className="!w-full !bg-[#2e2e48] !border-[#444] !text-white input-number-dark"
                             maxLength={13}
+                            prefix={<span className="text-gray-400 mr-2">LKR</span>}
                             formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                             parser={(value) => value?.replace(/\D/g, '')}
                         />
