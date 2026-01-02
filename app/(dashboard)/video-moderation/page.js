@@ -226,7 +226,7 @@ export default function VideoModerationPage() {
                 styles = "bg-slate-100 text-slate-500 border-slate-500";
                 break;
             default:
-                styles = "bg-gray-100 text-gray-600 border-gray-200";
+                styles = "bg-indigo-50 text-indigo-500 border-indigo-500";
         }
         return (
             <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${styles}`}>
